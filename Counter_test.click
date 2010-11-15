@@ -1,6 +1,4 @@
-// test.click
-// Run it at user level with
-// 'click Counter_test.click'
+// Counter_test.click 
 // iizke
 
 // Compound element
@@ -21,7 +19,7 @@ InfiniteSource(DATA \<
 		c0 a8 01 91 // Source IP Address
 		02 00 00 02 // Destination IP Address
 		13 69 13 69  00 14 d6 41  55 44 50 20
-		70 61 63 6b  65 74 21 0a>, LIMIT 100, STOP true)
+		70 61 63 6b  65 74 21 0a>, LIMIT 1000, STOP true)
 	-> c1 :: Counter(COUNT_CALL) 
 	-> Script(TYPE PACKET, print c1.count) 
 	-> Print("c")
