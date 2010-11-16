@@ -116,6 +116,9 @@ RandomInfiniteSource::run_task(Task *)
     for (int i = 0; i < n; i++) {
 	//Packet *p = _packet->clone();
 	Packet *p = _packet->clone(_rndbyteid);
+	if (!p) {
+	    continue;
+	}
         p->timestamp_anno().assign_now();
 	output(0).push(p);
     }
@@ -144,6 +147,7 @@ RandomInfiniteSource::pull(int)
     _count++;
     //Packet *p = _packet->clone();
     Packet *p = _packet->clone(_rndbyteid);
+    if (!p) return NULL;
     p->timestamp_anno().assign_now();
     return p;
 }
@@ -281,6 +285,10 @@ RandomBytePacket::clone(uint32_t byteid) {
     unsigned char * data;
     unsigned char rbyte = 0;
 
+    if (!p) {
+        printf("Cannot uniqueify packet\n");
+        return p;
+    }
     data = p->data();
     if ( byteid == 0 )
         return p->clone();

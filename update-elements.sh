@@ -1,11 +1,11 @@
 #!/bin/bash
-# This script support to install new click elements
+# This script supports to install new click elements
 # New click elements are put in elements/local
 # iizke
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
 # Bash shell script library functions
-source $FILEDIR/tools/libfuncs.sh
+source $FILEDIR/tools/libfuncs.sh 2>/dev/null
 # File .clickrc represents the Click source path 
 source ~/.clickrc 2>/dev/null
 
@@ -18,7 +18,6 @@ if [ "$CLICK_SRC" == "" ]; then
 		print_error "Maybe you do not install click. Please install it before continuing."
 		exit 1
 	fi
-	print_info "CLICK_SRC is ${CLICK_SRC}"
 	echo "export CLICK_SRC=${CLICK_SRC}" > ~/.clickrc
 fi
 
@@ -28,6 +27,7 @@ if [ ! -d "${CLICK_SRC}" ]; then
 	exit
 fi
 
+print_info "CLICK_SRC is ${CLICK_SRC}"
 mkdir -p $CLICK_SRC/elements/local
 cp elements/*.cc elements/*.hh $CLICK_SRC/elements/local
 cd $CLICK_SRC
