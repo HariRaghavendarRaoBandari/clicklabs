@@ -9,6 +9,7 @@ RandomInfiniteSource(DATA \<
 		02 00 00 02 // Destination IP Address
 		13 69 13 69  00 14 d6 41  55 44 50 20
 		70 61 63 6b  65 74 21 0a>, LIMIT 1000, STOP true, RNDBYTEID 30)
+	-> Queue(100)
 	-> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
 	-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
