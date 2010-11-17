@@ -1,7 +1,7 @@
 /*
- * infinitesource.{cc,hh} -- element generates configurable random infinite stream
- * of packets at an position of byte
- * iizke (inherited from Eddie Kohler)
+ * randinfinitesource.{cc,hh} -- element generates configurable infinite stream
+ * of packets
+ * Eddie Kohler
  *
  * Copyright (c) 1999-2000 Massachusetts Institute of Technology
  * Copyright (c) 2006 Regents of the University of California
@@ -18,31 +18,29 @@
  */
 
 #include <click/config.h>
-#include "random_infinitesource.hh"
+#include "randinfinitesource.hh"
 #include <click/confparse.hh>
 #include <click/error.hh>
 #include <click/router.hh>
 #include <click/standard/scheduleinfo.hh>
 #include <click/glue.hh>
 #include <click/straccum.hh>
-//#include <iostream>
 CLICK_DECLS
 
-RandomInfiniteSource::RandomInfiniteSource()
-  : _task(this)
+RandInfiniteSource::RandInfiniteSource()
+  : _packet(0), _task(this)
 {
-    _packet = new RandomBytePacket;
 }
 
-RandomInfiniteSource::~RandomInfiniteSource()
+RandInfiniteSource::~RandInfiniteSource()
 {
 }
 
 void *
-RandomInfiniteSource::cast(const char *n)
+RandInfiniteSource::cast(const char *n)
 {
-  if (strcmp(n, "RandomInfiniteSource") == 0)
-    return (RandomInfiniteSource *)this;
+  if (strcmp(n, "RandInfiniteSource") == 0)
+    return (RandInfiniteSource *)this;
   else if (strcmp(n, Notifier::EMPTY_NOTIFIER) == 0)
     return static_cast<Notifier *>(this);
   else
@@ -50,14 +48,14 @@ RandomInfiniteSource::cast(const char *n)
 }
 
 int
-RandomInfiniteSource::configure(Vector<String> &conf, ErrorHandler *errh)
+RandInfiniteSource::configure(Vector<String> &conf, ErrorHandler *errh)
 {
     ActiveNotifier::initialize(Notifier::EMPTY_NOTIFIER, router());
-  String data = "Random in a packet, at least 64 bytes long. Well, now it is.";
+  String data = "Random bullshit in a packet, at least 64 bytes long. Well, now it is.";
   int limit = -1;
   int burstsize = 1;
   int datasize = -1;
-  uint32_t rndbyteid = 0;
+  int rndbyteid = 0;
   bool active = true, stop = false;
 
   if (cp_va_kparse(conf, this, errh,
@@ -67,8 +65,8 @@ RandomInfiniteSource::configure(Vector<String> &conf, ErrorHandler *errh)
 		   "ACTIVE", cpkP, cpBool, &active,
 		   "LENGTH", 0, cpInteger, &datasize,
 		   "DATASIZE", 0, cpInteger, &datasize, // deprecated
-		   "STOP", 0, cpBool, &stop,
 		   "RNDBYTEID", 0, cpInteger, &rndbyteid,
+		   "STOP", 0, cpBool, &stop,
 		   cpEnd) < 0)
     return -1;
   if (burstsize < 1)
@@ -89,7 +87,7 @@ RandomInfiniteSource::configure(Vector<String> &conf, ErrorHandler *errh)
 }
 
 int
-RandomInfiniteSource::initialize(ErrorHandler *errh)
+RandInfiniteSource::initialize(ErrorHandler *errh)
 {
   if (output_is_push(0)) {
     ScheduleInfo::initialize_task(this, &_task, errh);
@@ -99,14 +97,14 @@ RandomInfiniteSource::initialize(ErrorHandler *errh)
 }
 
 void
-RandomInfiniteSource::cleanup(CleanupStage)
+RandInfiniteSource::cleanup(CleanupStage)
 {
   if (_packet)
     _packet->kill();
 }
 
 bool
-RandomInfiniteSource::run_task(Task *)
+RandInfiniteSource::run_task(Task *)
 {
     if (!_active || !_nonfull_signal)
 	return false;
@@ -114,12 +112,8 @@ RandomInfiniteSource::run_task(Task *)
     if (_limit >= 0 && _count + n >= _limit)
 	n = (_count > _limit ? 0 : _limit - _count);
     for (int i = 0; i < n; i++) {
-	//Packet *p = _packet->clone();
-	Packet *p = _packet->clone(_rndbyteid);
-	if (!p) {
-	    continue;
-	}
-        p->timestamp_anno().assign_now();
+	Packet *p = rebuild_packet(_rndbyteid);
+	p->timestamp_anno().assign_now();
 	output(0).push(p);
     }
     _count += n;
@@ -131,7 +125,7 @@ RandomInfiniteSource::run_task(Task *)
 }
 
 Packet *
-RandomInfiniteSource::pull(int)
+RandInfiniteSource::pull(int)
 {
     if (!_active) {
     done:
@@ -145,36 +139,34 @@ RandomInfiniteSource::pull(int)
 	goto done;
     }
     _count++;
-    //Packet *p = _packet->clone();
-    Packet *p = _packet->clone(_rndbyteid);
-    if (!p) return NULL;
+    Packet *p = rebuild_packet(_rndbyteid);
     p->timestamp_anno().assign_now();
     return p;
 }
 
 void
-RandomInfiniteSource::setup_packet()
+RandInfiniteSource::setup_packet()
 {
     if (_packet)
 	_packet->kill();
 
     if (_datasize < 0)
-	_packet->make(_data.data(), _data.length());
+	_packet = Packet::make(_data.data(), _data.length());
     else if (_datasize <= _data.length())
-	_packet->make(_data.data(), _datasize);
+	_packet = Packet::make(_data.data(), _datasize);
     else {
 	// make up some data to fill extra space
 	StringAccum sa;
 	while (sa.length() < _datasize)
 	    sa << _data;
-	_packet->make(sa.data(), _datasize);
+	_packet = Packet::make(sa.data(), _datasize);
     }
 }
 
 String
-RandomInfiniteSource::read_param(Element *e, void *vparam)
+RandInfiniteSource::read_param(Element *e, void *vparam)
 {
-  RandomInfiniteSource *is = (RandomInfiniteSource *)e;
+  RandInfiniteSource *is = (RandInfiniteSource *)e;
   switch ((intptr_t)vparam) {
    case 0:			// data
     return is->_data;
@@ -186,10 +178,10 @@ RandomInfiniteSource::read_param(Element *e, void *vparam)
 }
 
 int
-RandomInfiniteSource::change_param(const String &s, Element *e, void *vparam,
+RandInfiniteSource::change_param(const String &s, Element *e, void *vparam,
 			     ErrorHandler *errh)
 {
-  RandomInfiniteSource *is = (RandomInfiniteSource *)e;
+  RandInfiniteSource *is = (RandInfiniteSource *)e;
   switch ((intptr_t)vparam) {
 
    case 0:			// data
@@ -247,7 +239,7 @@ RandomInfiniteSource::change_param(const String &s, Element *e, void *vparam,
 }
 
 void
-RandomInfiniteSource::add_handlers()
+RandInfiniteSource::add_handlers()
 {
   add_read_handler("data", read_param, (void *)0, Handler::CALM);
   add_write_handler("data", change_param, (void *)0, Handler::RAW);
@@ -267,61 +259,43 @@ RandomInfiniteSource::add_handlers()
   add_data_handlers("datasize", Handler::OP_READ | Handler::CALM | Handler::DEPRECATED, &_datasize);
   add_write_handler("datasize", change_param, (void *)6);
   //add_read_handler("notifier", read_param, (void *)7);
-
   add_task_handlers(&_task);
 }
 
-static unsigned char
+static char
 random_byte() {
     //srand ( time(NULL) );
-    return (unsigned char)(rand() % 255 + 1);
+    return (char)(rand() % 255 + 1);
 }
 
-// iizke: This will randomize the byte in packet
 Packet *
-RandomBytePacket::clone(uint32_t byteid) {
+RandInfiniteSource::rebuild_packet(int32_t byteid)
+{
 #if CLICK_USERLEVEL
-    WritablePacket *p = (this->_packet)->uniqueify();
-    unsigned char * data;
-    unsigned char rbyte = 0;
 
-    if (!p) {
-        printf("Cannot uniqueify packet\n");
+    char rbyte = 0;
+    char *data = NULL;
+    if (!_data) {
         return 0;
     }
-    data = p->data();
     if ( byteid == 0 )
-        return p->clone();
-    if ( byteid <= p->length() ) {
+        return _packet->clone();
+    if ( byteid <= _data.length() ) {
         rbyte = random_byte();
+        data = _data.mutable_data();
+        if (!data)
+            return 0;
         data[byteid - 1] = rbyte;
     }
-    return p->clone();
-#else // NO SUPPORT FOR KERNEL-LEVEL
-    return p->clone();
+    setup_packet();
+    return _packet->clone();
+
+
+//	return _packet->clone();
+#else
+    return _packet->clone();
 #endif
 }
 
-void RandomBytePacket::kill() {
-    if (_packet)
-      _packet->kill();
-    return;
-}
-
-void RandomBytePacket::make (const void *data, uint32_t length) {
-    _packet = Packet::make(data, length);
-    return;
-}
-
-RandomBytePacket::RandomBytePacket ()
-    :_packet(0)
-{
-}
-
-RandomBytePacket::~RandomBytePacket () {
-    if (_packet)
-        _packet->kill();
-}
-
 CLICK_ENDDECLS
-EXPORT_ELEMENT(RandomInfiniteSource)
+EXPORT_ELEMENT(RandInfiniteSource)

@@ -18,7 +18,7 @@ elementclass STimestampQueue {
 	-> StoreTimestamp(TAIL true)
 	-> Queue($buffer_size)
 	-> StoreTimestamp(TAIL true)
-//	-> Print("SQ", MAXLENGTH 70)
+	-> Print("SQ", MAXLENGTH 70, TIMESTAMP true)
 	-> output
 }
 
@@ -52,13 +52,13 @@ elementclass PLIFOQueue {
 	-> output
 }
 
-//PQ  :: PTimestampQueue(SIZE 1000);
-SQ  :: STimestampQueue(SIZE 1000);
+PQ  :: PTimestampQueue(SIZE 1000);
+//SQ  :: STimestampQueue(SIZE 1000);
 //SLQ :: SLIFOQueue(SIZE 1000);
 //PLQ :: PLIFOQueue(SIZE 1000);
 
 //InfiniteSource(DATA \<
-RandomInfiniteSource(DATA \<
+RandInfiniteSource(DATA \<
 		00 00 c0 ae  67 ef  00 00 00 00 00 00  08 00 // Datalink header
 		45 00 00 28  00 00 00 00  40 11 
 		77 c3       // Checksum
@@ -67,14 +67,15 @@ RandomInfiniteSource(DATA \<
 		13 69 13 69  00 14 d6 41  55 44 50 20
 		70 61 63 6b  65 74 21 0a>,
 //		LIMIT 1000, STOP true, BURST 2) 
-		LIMIT 1000, STOP true, BURST 100, RNDBYTEID 30)
+		LIMIT 1000, STOP true, BURST 20, RNDBYTEID 30)
+	-> Print ("gen")
 	// Add one FIFO QUEUE, timestamp using PRINT
-//	-> PQ
+	-> PQ
 	// Unqueue to change from pull to push
-//	-> Unqueue
-	// Add one FIFO QUEUE, timestamp using StoreTimestamp in tail of packet
-	-> SQ
 	-> Unqueue
+	// Add one FIFO QUEUE, timestamp using StoreTimestamp in tail of packet
+//	-> SQ
+//	-> Unqueue
 //	-> PLQ
 	-> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
