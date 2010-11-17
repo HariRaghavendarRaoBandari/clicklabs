@@ -36,6 +36,7 @@ elementclass SLIFOQueue {
 	-> [1]MQ
 	-> StoreTimestamp(TAIL true)
 	-> Print("SLQ", MAXLENGTH 70)
+	-> output
 }
 
 // LIFO Queue with Print
@@ -53,8 +54,8 @@ elementclass PLIFOQueue {
 }
 
 PQ  :: PTimestampQueue(SIZE 1000);
-//SQ  :: STimestampQueue(SIZE 1000);
-//SLQ :: SLIFOQueue(SIZE 1000);
+SQ  :: STimestampQueue(SIZE 1000);
+SLQ :: SLIFOQueue(SIZE 1000);
 //PLQ :: PLIFOQueue(SIZE 1000);
 
 //InfiniteSource(DATA \<
@@ -68,22 +69,20 @@ RandInfiniteSource(DATA \<
 		70 61 63 6b  65 74 21 0a>,
 //		LIMIT 1000, STOP true, BURST 2) 
 		LIMIT 1000, STOP true, BURST 20, RNDBYTEID 30)
-	-> Print ("gen")
 	// Add one FIFO QUEUE, timestamp using PRINT
 	-> PQ
 	// Unqueue to change from pull to push
 	-> Unqueue
 	// Add one FIFO QUEUE, timestamp using StoreTimestamp in tail of packet
-//	-> SQ
-//	-> Unqueue
-//	-> PLQ
+	-> SQ
+	-> Unqueue
+	-> SLQ
 	-> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
 	-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
 	-> SetIPChecksum
 	-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
 	-> c::Counter(COUNT_CALL)
-	-> Print ("check", MAXLENGTH 32)
 	-> Discard;
 
 //Script(TYPE DRIVER, print $(c.count)); //With this script, cannot count 1000, normally, not exceed 130
