@@ -8,7 +8,7 @@ CLICK_DECLS
 /*
 =c
 
-RandInfiniteSource([DATA, LIMIT, BURST, ACTIVE, I<KEYWORDS>])
+RandInfiniteSource([DATA, LIMIT, BURST, ACTIVE, RNDBYTEID, I<KEYWORDS>])
 
 =s basicsources
 
@@ -51,6 +51,10 @@ Boolean. Same as the ACTIVE argument.
 
 Boolean. If true, then stop the driver once LIMIT packets are sent. Default is
 false.
+
+=item RNDBYTEID
+Integer. Random byte value at position (number RNDBYTEID, counting from 1 to 
+DATA.length) in DATA. If it is 0, DATA does not change.
 
 =back
 

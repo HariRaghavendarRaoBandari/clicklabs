@@ -265,7 +265,7 @@ RandInfiniteSource::add_handlers()
 static char
 random_byte() {
     //srand ( time(NULL) );
-    return (char)(rand() % 255 + 1);
+    return (char)(click_random(1, 255));
 }
 
 Packet *
