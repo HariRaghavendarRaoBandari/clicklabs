@@ -5,7 +5,8 @@
  * Discrete Random Variable Simulation 
  */
 #include <stdint.h>
-#define MAX_RANGE	(1<<20)
+
+#define MAX_RANGE	1000000
 
 enum DISTRIB_T	{D_NORMAL, D_POISSON, D_BINOMIAL, D_EXPONENTIAL, D_UNIFORM};
 
@@ -15,11 +16,13 @@ class RandomSimulator { public:
   ~RandomSimulator ()    {}; 
   double density (double value); 
   double density (DISTRIB_T type, double value);
+  double distribution_func(double value);
+  double distribution_func(DISTRIB_T type, double value);
   double random_value ();
   DISTRIB_T test;
 
   inline DISTRIB_T get_type () { return type; }
-  void set_type(DISTRIB_T t);
+  void set_type(DISTRIB_T t) { type = t; }
   inline double get_lambda () { return lambda; }
   inline void set_lambda (double l) { lambda = l; }
   inline double get_max_value () { return max_value; }

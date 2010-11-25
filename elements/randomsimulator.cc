@@ -4,28 +4,32 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+//#include <time.h>
+#include <sys/time.h>
 #include <math.h>
 #include "randomsimulator.hh"
 
 double RandomSimulator::factorial(uint32_t n) {
   double value = 1;
-  for (int i = 1; i <=n ; i++)
+  for (uint32_t i = 1; i <=n ; i++)
     value = value * i;
   return value;
 }
 
 double RandomSimulator::density(DISTRIB_T type, double value) {
   uint32_t int_value = 0;
-  int i = 1;
+  uint32_t i = 1;
   double p = 0;
   double den = 1;
+
+  if ((value < 0) || (value > max_value)) return 0;
 
   switch (type) {
     case D_POISSON:
       int_value = (uint32_t)value;
       for (i = 1; i <= int_value; i++)
         den = den * lambda / i;
-      den = den * exp(int_value);
+      den = den * exp(-lambda);
       break;
     case D_BINOMIAL:
       p = lambda / max_value;
@@ -34,10 +38,7 @@ double RandomSimulator::density(DISTRIB_T type, double value) {
             (factorial((uint32_t)value)*factorial((uint32_t)(max_value - value)));
       break;
     case D_EXPONENTIAL:
-      if (value < 0) 
-        den = 0;
-      else 
-        den = lambda * exp(-lambda*value);
+      den = lambda * exp(-lambda*value);
       break;
     case D_UNIFORM:
       den = 1 / max_value;
@@ -51,25 +52,60 @@ double RandomSimulator::density(DISTRIB_T type, double value) {
   return den;
 }
 
+double RandomSimulator::distribution_func(DISTRIB_T type, double value) {
+  double ret = 0;
+  
+  if (value < 0) return 0;
+  if (value >= max_value) return 1;
+
+  switch (type) {
+    case D_POISSON:
+    case D_BINOMIAL:
+    case D_NORMAL:
+      for (int i = 0; i <= value; i++)
+        ret += density(type, i);
+      break;
+    case D_EXPONENTIAL:
+      ret = 1 - exp(-lambda*value);
+      break;
+    case D_UNIFORM:
+      ret = value/max_value;
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 double RandomSimulator::density(double value) {
-  return density(type);
+  return density(type, value);
+}
+
+double RandomSimulator::distribution_func(double value) {
+  return distribution_func(type, value);
 }
 
 double RandomSimulator::random_value() {
+
   uint32_t val = 0;
   double lower_bound = 0;
   double u = generate_uniform_rv();
-
+  //printf("u = %f \n", u);
   for (val = 0; val < max_value; val++) {
     lower_bound += density(val);
     if (lower_bound > u)
-      break;    
+      break;
   }
-
   return val;
 }
 
 double RandomSimulator::generate_uniform_rv() {
+  struct timeval tv;
+  struct timezone tz;
+  
+  gettimeofday(&tv, &tz);
+  srand(tv.tv_usec);
   int rv = random() % MAX_RANGE;
-  return (double)(rv)/MAX_RANGE;
+  double ret = (double)rv/(double)MAX_RANGE;
+  return ret;
 }

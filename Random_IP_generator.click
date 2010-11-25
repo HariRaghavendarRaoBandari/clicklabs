@@ -53,10 +53,11 @@ elementclass PLIFOQueue {
 	-> output
 }
 
-PQ  :: PTimestampQueue(SIZE 1000);
-SQ  :: STimestampQueue(SIZE 1000);
-SLQ :: SLIFOQueue(SIZE 1000);
+//PQ  :: PTimestampQueue(SIZE 1000);
+//SQ  :: STimestampQueue(SIZE 1000);
+//SLQ :: SLIFOQueue(SIZE 1000);
 //PLQ :: PLIFOQueue(SIZE 1000);
+RQ  :: RandomQueue(CAPACITY 100);
 
 //InfiniteSource(DATA \<
 RandInfiniteSource(DATA \<
@@ -67,18 +68,21 @@ RandInfiniteSource(DATA \<
 		02 00 00 02 // Destination IP Address
 		13 69 13 69  00 14 d6 41  55 44 50 20
 		70 61 63 6b  65 74 21 0a>,
-//		LIMIT 1000, STOP true, BURST 2) 
-		LIMIT 1000, STOP true, BURST 20, RNDBYTEID 30)
-	// Add one FIFO QUEUE, timestamp using PRINT
-	-> PQ
+		//LIMIT 1000, STOP true, BURST 2) 
+		LIMIT 40, STOP true, BURST 10, RNDBYTEID 30)
+  // Add one FIFO QUEUE, timestamp using PRINT
+	//-> PQ
 	// Unqueue to change from pull to push
-	-> Unqueue
+	//-> Unqueue
 	// Add one FIFO QUEUE, timestamp using StoreTimestamp in tail of packet
-	-> SQ
-	-> Unqueue
-	-> SLQ
-	-> Strip(14)
+	//-> SQ
+	//-> Unqueue
+	//-> PLQ
+  //-> Unqueue
+	-> RQ
+  -> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
+  -> Print("RQ", TIMESTAMP true)
 	-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
 	-> SetIPChecksum
 	-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
