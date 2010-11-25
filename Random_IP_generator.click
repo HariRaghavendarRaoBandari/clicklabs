@@ -57,7 +57,7 @@ elementclass PLIFOQueue {
 //SQ  :: STimestampQueue(SIZE 1000);
 //SLQ :: SLIFOQueue(SIZE 1000);
 //PLQ :: PLIFOQueue(SIZE 1000);
-RQ  :: RandomQueue(CAPACITY 100);
+//RQ  :: RandomQueue(CAPACITY 10000);
 
 //InfiniteSource(DATA \<
 RandInfiniteSource(DATA \<
@@ -68,8 +68,8 @@ RandInfiniteSource(DATA \<
 		02 00 00 02 // Destination IP Address
 		13 69 13 69  00 14 d6 41  55 44 50 20
 		70 61 63 6b  65 74 21 0a>,
-		//LIMIT 1000, STOP true, BURST 2) 
-		LIMIT 40, STOP true, BURST 10, RNDBYTEID 30)
+		//LIMIT 1000, STOP true, BURST 5) 
+		LIMIT 10000, STOP true, BURST 5, RNDBYTEID 30)
   // Add one FIFO QUEUE, timestamp using PRINT
 	//-> PQ
 	// Unqueue to change from pull to push
@@ -79,14 +79,22 @@ RandInfiniteSource(DATA \<
 	//-> Unqueue
 	//-> PLQ
   //-> Unqueue
-	-> RQ
+	//-> RQ
   -> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
-  -> Print("RQ", TIMESTAMP true)
-	-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
-	-> SetIPChecksum
-	-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
-	-> c::Counter(COUNT_CALL)
+  -> SetCRC32
+  -> c1::Counter(COUNT_CALL)
+  // Above: error free link
+
+  // Create some bit error here
+  // Estimation number of lost packets: 
+  //    perror * packet_len(bit) * number_of_packets
+  -> RandomBitErrors(P 0.000002)
+	//-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
+	//-> SetIPChecksum
+	//-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
+	-> CheckCRC32
+  -> c2::Counter(COUNT_CALL)
 	-> Discard;
 
-//Script(TYPE DRIVER, print $(c.count)); //With this script, cannot count 1000, normally, not exceed 130
+s::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) 10000 ) ); //With this script, cannot count 1000, normally, not exceed 130
