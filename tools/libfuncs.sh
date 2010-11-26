@@ -540,3 +540,64 @@ dialog_show () {
 	
 }
 
+
+## Manipulate Parsing Options
+OPT_VALS=()
+option_config_add () {
+  local opt=$1
+  local val=$2
+  local has_arg=$3
+  local meaning=$4
+
+  if [ "$opt" == "" ]; then
+    print_error "Option string is not provided. Stop." 
+    return;
+  fi
+  if [ "$val" == "" ]; then
+    print_error "Variable string name for option ${opt} is not provided. Stop."
+    return;
+  fi
+  if [ "$has_arg" == "" ]; then
+    print_warn "Variable string name is not provided. Stop."
+    has_arg=0
+  fi  
+
+  OPT_VALS=( "${OPT_VALS[@]}" "$opt" "$val" "$has_arg" "$meaning")
+}
+
+option_parse () {
+  local allopt=("$@")
+  local i=0
+  local optlen=${#allopt[@]}
+  local optvalslen=${#OPT_VALS[@]}
+
+  for ((i=0;i<$optlen;i++)); do
+    flag="${allopt[i]}"
+    for ((j=0;j<$optvalslen;j+=4)); do
+      local opt="${OPT_VALS[j]}"
+      local val="${OPT_VALS[j+1]}"
+      local has_arg="${OPT_VALS[j+2]}"
+      local meaning="${OPT_VALS[j+3]}"
+
+      if [ "$flag" == "$opt" ]; then 
+        if [ "$has_arg" == "1" ]; then
+          local tempval=`eval echo \\${$val}`
+          if [ "$tempval" == "" ]; then
+            tempval="${allopt[i+1]}"
+          else
+            tempval="$tempval":"${allopt[i+1]}"
+          fi
+          printf -v $val %b "${tempval}"
+          i=$((i+has_arg))
+        else
+          printf -v $val %b "true"
+        fi
+        break
+      fi
+    done
+    if [ "$j" == "$optvalslen" ]; then
+      print_warn "Option $flag is not supported."
+    fi
+  done
+}
+

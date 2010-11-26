@@ -9,7 +9,7 @@ clean () {
   killall -9 clicky
 }
 
-trap clean 2
+trap clean 2 EXIT SIGTERM
 
 usage () {
   echo -e "\
@@ -25,30 +25,17 @@ usage () {
                 
 }
 
-unset CLICK_FILE
-unset PORT
-unset CCSS_FILE
+option_config_add "-h" "HELP" "0" "Help on visual-clicky"
+option_config_add "-f" "CLICK_FILE" "1" "Click file"
+option_config_add "-p" "PORT" "1" "Port"
+option_config_add "-s" "CCSS_FILE" "1" "CCSS File used to make decoration on clicky"
 
-allopt=("$@")
+option_parse "$@"
 
-for ((i=0;i<$#;i++)); do
-  flag="${allopt[i]}"
-  case "${flag}" in
-    -f|--file) CLICK_FILE="${allopt[i+1]}"
-      i=$((i+1))
-      ;;
-    -p|--port) PORT="${allopt[i+1]}"
-      i=$((i+1))
-      ;;
-    -h|--help) usage; exit 0;;
-    -s|--ccss) CCSS_FILE="${allopt[i+1]}"
-      i=$((i+1))
-      ;;
-    *) echo -e "Option $flag is not processed.\n
-                Please use option ${bold}-h${txtrst} to get more information"
-      ;;
-    esac
-done
+if [ "$HELP" == "true" ]; then
+  usage
+  exit 0
+fi
 
 if [ "$CCSS_FILE" = "" ]; then
   CCSS_FILE=./clicky.ccss
@@ -63,6 +50,6 @@ if [ "$CLICK_FILE" = "" ]; then
   exit 0
 fi
 
-click -p $PORT $CLICK_FILE &
+click -R -p $PORT -f $CLICK_FILE & 
 sleep 1
 clicky -p $PORT -s $CCSS_FILE 
