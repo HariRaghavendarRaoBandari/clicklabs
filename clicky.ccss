@@ -15,3 +15,4 @@ Counter handler#count {
 	autorefresh: 100ms;
 }
 
+RoundRobinSched {flow-split: ab/a; }

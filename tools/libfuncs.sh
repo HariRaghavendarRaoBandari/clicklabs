@@ -601,3 +601,5 @@ option_parse () {
   done
 }
 
+usage_print() {
+}

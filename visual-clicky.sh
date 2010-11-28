@@ -5,8 +5,8 @@ FILEDIR=$(dirname $(which $BASH_SOURCE))
 source $FILEDIR/tools/libfuncs.sh 2>/dev/null
 
 clean () {
-  killall -9 click 
-  killall -9 clicky
+  killall -9 click 2>/dev/null
+  killall -9 clicky 2>/dev/null
 }
 
 trap clean 2 EXIT SIGTERM
