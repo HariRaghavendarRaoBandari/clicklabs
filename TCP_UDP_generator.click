@@ -24,17 +24,23 @@ elementclass TCP_UDP_generator {
     -> [1]rrsched;
 
   rrsched[0]
-    -> Print("Paint", PRINTANNO true, CONTENTS NONE)
+    //-> Print("Paint", PRINTANNO true, CONTENTS NONE)
     -> output
 }
 
 TCP_UDP_generator(TCP 100, UDP 10)
+  //-> scale::Script (TYPE PACKET, div $(tcp_counter.count) $(udp_counter.count) )
   -> cp::CheckPaint (16);
 
 cp[0]
-  -> Counter
+  -> tcp_counter::Counter
   -> TimedSink (0.001);
 
 cp[1]
-  -> Counter
+  -> udp_counter::Counter
   -> Discard;
+
+scale::Script (TYPE PASSIVE, 
+                //wait 2,
+                return $(div $(tcp_counter.count) $(udp_counter.count)));
+                //loop);

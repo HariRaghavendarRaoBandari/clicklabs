@@ -1,6 +1,7 @@
 // Counter_test.click 
 // iizke
 
+Script(TYPE ACTIVE, wait 2);
 // Compound element
 elementclass PrintCounter {
 	// Parameter declaration
@@ -8,7 +9,7 @@ elementclass PrintCounter {
 	// Procedure
 	input
 	-> c::Counter(COUNT_CALL)
-	-> Print($label, ACTIVE $boolp)
+	//-> Print($label, ACTIVE $boolp)
 	-> output;
 }
 
@@ -19,22 +20,22 @@ InfiniteSource(DATA \<
 		c0 a8 01 91 // Source IP Address
 		02 00 00 02 // Destination IP Address
 		13 69 13 69  00 14 d6 41  55 44 50 20
-		70 61 63 6b  65 74 21 0a>, LIMIT 1000, STOP true)
+		70 61 63 6b  65 74 21 0a>, LIMIT 10000, STOP true)
 	-> c1 :: Counter(COUNT_CALL) 
 	-> Script(TYPE PACKET, print c1.count) 
-	-> Print("c")
+	//-> Print("c")
 	-> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
 	-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.145);
 
 chkIP[0]
 	-> otherIP_counter :: Counter(COUNT_CALL)
-	-> Print(n) // not 192.168.1.145
+	//-> Print(n) // not 192.168.1.145
 	-> Discard;
 
 chkIP[1] 
-	-> p :: PrintCounter("y", PRINTACTIVE false)
+	//-> p :: PrintCounter("y", PRINTACTIVE false)
 	-> Discard;
 
-Script(TYPE DRIVER, print '(all)'$(c1.count) '= (other)'$(otherIP_counter.count) '+ (proper)'$(p/c.count)) ; // Use this Script to print out the Counter when route stops
+//Script(TYPE DRIVER, print '(all)'$(c1.count) '= (other)'$(otherIP_counter.count) '+ (proper)'$(p/c.count)) ; // Use this Script to print out the Counter when route stops
 

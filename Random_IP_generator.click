@@ -60,7 +60,7 @@ elementclass PLIFOQueue {
 //RQ  :: RandomQueue(CAPACITY 10000);
 
 //InfiniteSource(DATA \<
-RandInfiniteSource(DATA \<
+source::RandInfiniteSource(DATA \<
 		00 00 c0 ae  67 ef  00 00 00 00 00 00  08 00 // Datalink header
 		45 00 00 28  00 00 00 00  40 11 
 		77 c3       // Checksum
@@ -69,7 +69,7 @@ RandInfiniteSource(DATA \<
 		13 69 13 69  00 14 d6 41  55 44 50 20
 		70 61 63 6b  65 74 21 0a>,
 		//LIMIT 1000, STOP true, BURST 5) 
-		LIMIT 10000, STOP true, BURST 5, RNDBYTEID 30)
+		LIMIT -1, STOP true, BURST 5, RNDBYTEID 30)
   // Add one FIFO QUEUE, timestamp using PRINT
 	//-> PQ
 	// Unqueue to change from pull to push
@@ -89,7 +89,7 @@ RandInfiniteSource(DATA \<
   // Create some bit error here
   // Estimation number of lost packets: 
   //    perror * packet_len(bit) * number_of_packets
-  -> RandomBitErrors(P 0.000002)
+  -> e::RandomBitErrors(P 0.000002)
 	//-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
 	//-> SetIPChecksum
 	//-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
@@ -97,4 +97,5 @@ RandInfiniteSource(DATA \<
   -> c2::Counter(COUNT_CALL)
 	-> Discard;
 
-s::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) 10000 ) ); //With this script, cannot count 1000, normally, not exceed 130
+s1::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.count) ) ); 
+Passed_estimation::Script(TYPE PASSIVE, return $(mul $(sub 1 $(e.p_bit_error)) $(c1.byte_count) 8 ) );

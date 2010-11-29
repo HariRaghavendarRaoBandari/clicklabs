@@ -4,15 +4,38 @@
 // test3.click, and shows off how Clicky works with live configurations.
 
 Queue {
-	decorations: fullness;
+  decorations: fullness;
+  text: "%n\n<b>%{length}/%{capacity}</b>\n<small>%c</small>";
 }
 
 Counter {
 	text: "%n\n<b>%{count}</b>\n<small>%c</small>";
 }
 
-Counter handler#count {
+* handler#count {
 	autorefresh: 100ms;
 }
 
-RoundRobinSched {flow-split: ab/a; }
+Script {
+  text: "%n\n<b>%{run}</b>\n<small>%c</small>";
+  autorefresh: 1s;
+}
+
+TimedSource {
+  text: "%n\n<b>interval %{interval}</b>\n<small>%c</small>";
+  scale: 110%;
+}
+
+TimedSource:hover {
+  text: "%n\n<b>count = %{count}</b>\n<small>%c</small>";
+}
+
+TimedSink {
+  text: "%n\n<b>interval %{interval}</b>\n<small>%c</small>";
+}
+
+RandomBitErrors {
+  text: "%n\n<b>P %{p_bit_error}</b>\n<small>%c</small>";  
+}
+
+RoundRobinSched {flow-split: ab/ab; }
