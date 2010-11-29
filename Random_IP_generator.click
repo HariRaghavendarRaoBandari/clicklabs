@@ -87,9 +87,9 @@ source::RandInfiniteSource(DATA \<
   // Above: error free link
 
   // Create some bit error here
-  // Estimation number of lost packets: 
-  //    perror * packet_len(bit) * number_of_packets
-  -> e::RandomBitErrors(P 0.000002)
+  // Estimation number of lost packets (assume: all packets have the same size): 
+  //    (p_packet_error = perror * packet_len(bit) >= 1 ? 0 : p_packet_error ) * number_of_packets
+  -> e::RandomBitErrors(P 0.00002)
 	//-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
 	//-> SetIPChecksum
 	//-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)
@@ -97,5 +97,9 @@ source::RandInfiniteSource(DATA \<
   -> c2::Counter(COUNT_CALL)
 	-> Discard;
 
-s1::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.count) ) ); 
-Passed_estimation::Script(TYPE PASSIVE, return $(mul $(sub 1 $(e.p_bit_error)) $(c1.byte_count) 8 ) );
+lostp_percent::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.count) ) ); 
+lostp_estimation::Script(TYPE PASSIVE, return $(div $(mul $(e.p_bit_error) $(c1.byte_count) 8 ) $(c1.count)) );
+// this estimation is correct if: P_BIT_ERROR * PACKET_SIZE < 1
+real_bit_error::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.byte_count) 8) );
+
+

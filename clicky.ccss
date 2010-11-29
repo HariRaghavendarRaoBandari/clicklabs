@@ -12,12 +12,23 @@ Counter {
 	text: "%n\n<b>%{count}</b>\n<small>%c</small>";
 }
 
+Counter handler#byte_count {
+  autorefresh: 1s;
+}
+
+Counter handler#bit_rate {
+  autorefresh: 1s;
+}
+
 * handler#count {
-	autorefresh: 100ms;
+	autorefresh: 1s;
 }
 
 Script {
   text: "%n\n<b>%{run}</b>\n<small>%c</small>";
+}
+
+Script handler#run {
   autorefresh: 1s;
 }
 
