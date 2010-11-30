@@ -28,7 +28,7 @@ elementclass TCP_UDP_generator {
     -> output
 }
 
-TCP_UDP_generator(TCP 100, UDP 10)
+TCP_UDP_generator(TCP 1000, UDP 1)
   //-> scale::Script (TYPE PACKET, div $(tcp_counter.count) $(udp_counter.count) )
   -> cp::CheckPaint (16);
 
@@ -40,7 +40,10 @@ cp[1]
   -> udp_counter::Counter
   -> Discard;
 
-scale::Script (TYPE PASSIVE, 
-                //wait 2,
+autoupdate_scale::Script (TYPE PASSIVE, 
                 return $(div $(tcp_counter.count) $(udp_counter.count)));
-                //loop);
+
+reset_button::Script (TYPE PASSIVE,
+                write tcp_counter.reset, 
+                write udp_counter.reset);
+

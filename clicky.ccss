@@ -24,12 +24,20 @@ Counter handler#bit_rate {
 	autorefresh: 1s;
 }
 
-Script {
+Script[name*=autoupdate] {
   text: "%n\n<b>%{run}</b>\n<small>%c</small>";
 }
 
-Script handler#run {
+Script[name*=autoupdate] handler#run {
   autorefresh: 1s;
+}
+
+#reset_button {
+  text: "<b>Reset%{run}</b>";
+}
+
+#reset_button handler#run {
+  autorefresh: off;
 }
 
 TimedSource {
@@ -49,4 +57,6 @@ RandomBitErrors {
   text: "%n\n<b>P %{p_bit_error}</b>\n<small>%c</small>";  
 }
 
-RoundRobinSched {flow-split: ab/ab; }
+Print { display: passthrough; }
+
+//RoundRobinSched {flow-split: ab/ab; }
