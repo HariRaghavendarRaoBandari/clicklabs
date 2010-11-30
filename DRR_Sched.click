@@ -1,5 +1,5 @@
-// FIFO_Sched.click
-// Simulate FIFO scheduler with at most 10 inputs (flows)
+// DRR_Sched.click
+// Simulate DRR scheduler with at most 10 inputs (flows)
 
 Sched::DRRSched();
 
