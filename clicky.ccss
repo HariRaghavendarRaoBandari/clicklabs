@@ -9,14 +9,18 @@ Queue {
 }
 
 Counter {
-	text: "%n\n<b>%{count}</b>\n<small>%c</small>";
+	text: "%n\n<b>%{byte_rate} Bps</b>\n<small>%c</small>";
 }
 
-Counter handler#byte_count {
+Counter:hover {
+  text: "<b>%{count} packets</b>"
+}
+
+Counter handler#*count {
   autorefresh: 1s;
 }
 
-Counter handler#bit_rate {
+Counter handler#*rate {
   autorefresh: 1s;
 }
 
@@ -60,3 +64,14 @@ RandomBitErrors {
 Print { display: passthrough; }
 
 //RoundRobinSched {flow-split: ab/ab; }
+
+RatedSource {
+  text: "%n\n<b>%{count}</b>\n<small>%c</small>";
+}
+RatedSource:hover {
+    text: "<b>%{rate} packets/s</b>";
+}
+
+BandwidthRatedUnqueue {
+  text: "%n\n<b>%{rate}</b>\n<small>%c</small>"
+}
