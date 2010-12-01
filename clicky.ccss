@@ -73,5 +73,13 @@ RatedSource:hover {
 }
 
 BandwidthRatedUnqueue {
-  text: "%n\n<b>%{rate}</b>\n<small>%c</small>"
+  text: "%n\n<b>%{rate}</b>\n<small>%c</small>";
 }
+
+BandwidthShaper {
+  text: "%n\n<b>%{rate}</b>\n<small>%c</small>";
+}
+BandwidthShaper handler#rate {
+  autorefresh: 0.5s;
+}
+
