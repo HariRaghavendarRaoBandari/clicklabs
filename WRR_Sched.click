@@ -3,10 +3,15 @@
 
 elementclass WRRSched {
   rrs::RoundRobinSched;
-  input[0] -> Queue(1000) -> BandwidthShaper (10KBps) -> [0]rrs;
-  input[1] -> Queue(1000) -> BandwidthShaper (20KBps) -> [1]rrs;
-  input[2] -> Queue(1000) -> BandwidthShaper (30KBps) -> [2]rrs;
-  input[3] -> Queue(1000) -> BandwidthShaper (40KBps) -> [3]rrs;
+  Script(TYPE ACTIVE, 
+    write bs0.rate $(div $(link.bandwidth) 10),
+    write bs1.rate $(div $(link.bandwidth) 5),
+    write bs2.rate $(div $(mul $(link.bandwidth) 3) 10),
+    write bs3.rate $(div $(mul $(link.bandwidth) 4) 10) );
+  input[0] -> Queue(1000) -> bs0::BandwidthShaper (10KBps) -> [0]rrs;
+  input[1] -> Queue(1000) -> bs1::BandwidthShaper (20KBps) -> [1]rrs;
+  input[2] -> Queue(1000) -> bs2::BandwidthShaper (30KBps) -> [2]rrs;
+  input[3] -> Queue(1000) -> bs3::BandwidthShaper (40KBps) -> [3]rrs;
   rrs -> output;
 }
 Sched::WRRSched();
@@ -36,7 +41,8 @@ s3 -> Paint(3) -> [3]Sched;
 
 Sched
   //Pull-to-Push Converter
-  -> BandwidthRatedUnqueue(100KBps)
+  -> link::LinkUnqueue(10000us, 100Mbps)
+  //-> Script(TYPE PACKET, write bs0.rate $(div $(link.bandwidth) 10))
   -> ps::PaintSwitch;
 
 ps[0] -> c0::Counter -> Discard;
@@ -50,3 +56,4 @@ ps[3] -> c3::Counter -> Discard;
 //ps[8] -> c8::Counter -> Discard;
 //ps[9] -> c9::Counter -> Discard;
 
+Script
