@@ -17,10 +17,10 @@ elementclass WRRSched {
 Sched::WRRSched();
 
 // Initialize flows
-s0::RatedSource(LENGTH 100, RATE 100);
-s1::RatedSource(LENGTH 100, RATE 200);
-s2::RatedSource(LENGTH 100, RATE 400);
-s3::RatedSource(LENGTH 100, RATE 800);
+s0::RatedSource(LENGTH 1000, RATE 125);
+s1::RatedSource(LENGTH 1000, RATE 250);
+s2::RatedSource(LENGTH 1000, RATE 375);
+s3::RatedSource(LENGTH 1000, RATE 500);
 //s4::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
 //s5::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
 //s6::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
@@ -41,7 +41,7 @@ s3 -> Paint(3) -> [3]Sched;
 
 Sched
   //Pull-to-Push Converter
-  -> link::LinkUnqueue(10000us, 100Mbps)
+  -> link::LinkUnqueue(10000us, 10Mbps)
   //-> Script(TYPE PACKET, write bs0.rate $(div $(link.bandwidth) 10))
   -> ps::PaintSwitch;
 
@@ -56,4 +56,4 @@ ps[3] -> c3::Counter -> Discard;
 //ps[8] -> c8::Counter -> Discard;
 //ps[9] -> c9::Counter -> Discard;
 
-Script
+
