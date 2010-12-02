@@ -1,19 +1,34 @@
-// FIFO_Sched.click
-// Simulate FIFO scheduler with at most 10 inputs (flows)
+// RR_Sched.click
+// Simulate RR scheduler with at most 10 inputs (flows)
 
-Sched::RoundRobinSched();
+elementclass RRSched {
+  rrs::RoundRobinSched;
+  input[0] -> q0::Queue(1000) -> [0]rrs;
+  input[1] -> q1::Queue(1000) -> [1]rrs;
+  input[2] -> q2::Queue(1000) -> [2]rrs;
+  input[3] -> q3::Queue(1000) -> [3]rrs;
+  input[4] -> q4::Queue(1000) -> [4]rrs;
+  input[5] -> q5::Queue(1000) -> [5]rrs;
+  input[6] -> q6::Queue(1000) -> [6]rrs;
+  input[7] -> q7::Queue(1000) -> [7]rrs;
+  input[8] -> q8::Queue(1000) -> [8]rrs;
+  input[9] -> q9::Queue(1000) -> [9]rrs;
+  rrs -> output;
+}
+
+Sched::RRSched();
 
 // Initialize flows
-s0::RatedSource(LENGTH 64, RATE 100);
-s1::RatedSource(LENGTH 64, RATE 200);
-s2::RatedSource(LENGTH 64, RATE 400);
-s3::RatedSource(LENGTH 64, RATE 800);
-s4::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
-s5::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
-s6::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
-s7::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
-s8::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
-s9::RatedSource(LENGTH 64, RATE 100, ACTIVE false);
+s0::RatedSource(LENGTH 1000, RATE 100, ACTIVE true);
+s1::RatedSource(LENGTH 1000, RATE 200, ACTIVE true);
+s2::RatedSource(LENGTH 1000, RATE 400, ACTIVE true);
+s3::RatedSource(LENGTH 1000, RATE 800, ACTIVE true);
+s4::RatedSource(LENGTH 1000, RATE 100, ACTIVE true);
+s5::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
+s6::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
+s7::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
+s8::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
+s9::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
 
 s0 -> Paint(0) -> [0]Sched;
 s1 -> Paint(1) -> [1]Sched;
@@ -28,7 +43,7 @@ s9 -> Paint(9) -> [9]Sched;
 
 Sched
   //Pull-to-Push Converter
-  -> BandwidthRatedUnqueue(100MBps)
+  -> LinkUnqueue(10000us, 10Mbps)
   -> ps::PaintSwitch;
 
 ps[0] -> c0::Counter -> Discard;

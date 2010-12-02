@@ -83,3 +83,6 @@ BandwidthShaper handler#rate {
   autorefresh: 0.5s;
 }
 
+LinkUnqueue {
+  text: "%n\n<b>%{bandwidth}bps</b>\n<small>%c</small>";
+}

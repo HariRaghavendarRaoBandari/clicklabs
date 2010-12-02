@@ -41,7 +41,7 @@ if [ "$HELP" == "true" ]; then
 fi
 
 if [ "$CCSS_FILE" = "" ]; then
-  CCSS_FILE=./clicky.ccss
+  CCSS_FILE=$FILEDIR/clicky.ccss
 fi
 
 if [ "$PORT" = "" ]; then
@@ -53,6 +53,6 @@ if [ "$CLICK_FILE" = "" ]; then
   exit 0
 fi
 
-click --no-warnings -R -p $PORT -f $CLICK_FILE & 
+click --no-warnings -R -p $PORT -f $CLICK_FILE 1>/dev/null & 
 sleep 1
-clicky -p $PORT -s $CCSS_FILE 
+clicky -p $PORT -s $CCSS_FILE 2>/dev/null 
