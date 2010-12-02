@@ -3,9 +3,13 @@
 // This Clicky Cascading Style Sheets file is designed to go with
 // test3.click, and shows off how Clicky works with live configurations.
 
-Queue {
+*Queue {
   decorations: fullness;
   text: "%n\n<b>%{length}/%{capacity}</b>\n<small>%c</small>";
+}
+
+*Source handler#length {
+  autorefresh: 1s;
 }
 
 Counter {
@@ -74,6 +78,9 @@ RatedSource:hover {
 
 BandwidthRatedUnqueue {
   text: "%n\n<b>%{rate}</b>\n<small>%c</small>";
+}
+BandwidthRatedUnqueue handler#rate {
+  autorefresh: 1s;
 }
 
 BandwidthShaper {

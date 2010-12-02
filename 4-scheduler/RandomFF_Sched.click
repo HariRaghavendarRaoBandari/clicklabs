@@ -1,18 +1,18 @@
-// FIFO_Sched.click
-// Simulate FIFO scheduler with at most 10 inputs (flows)
+// RandomFF_Sched.click
+// Simulate Random FIFO scheduler with at most 10 inputs (flows)
 
 elementclass FFSched {
   tss::TimeSortedSched;
-  input[0] -> q0::Queue(1000) -> [0]tss;
-  input[1] -> q1::Queue(1000) -> [1]tss;
-  input[2] -> q2::Queue(1000) -> [2]tss;
-  input[3] -> q3::Queue(1000) -> [3]tss;
-  input[4] -> q4::Queue(1000) -> [4]tss;
-  input[5] -> q5::Queue(1000) -> [5]tss;
-  input[6] -> q6::Queue(1000) -> [6]tss;
-  input[7] -> q7::Queue(1000) -> [7]tss;
-  input[8] -> q8::Queue(1000) -> [8]tss;
-  input[9] -> q9::Queue(1000) -> [9]tss;
+  input[0] -> q0::RandomQueue(1000) -> [0]tss;
+  input[1] -> q1::RandomQueue(1000) -> [1]tss;
+  input[2] -> q2::RandomQueue(1000) -> [2]tss;
+  input[3] -> q3::RandomQueue(1000) -> [3]tss;
+  input[4] -> q4::RandomQueue(1000) -> [4]tss;
+  input[5] -> q5::RandomQueue(1000) -> [5]tss;
+  input[6] -> q6::RandomQueue(1000) -> [6]tss;
+  input[7] -> q7::RandomQueue(1000) -> [7]tss;
+  input[8] -> q8::RandomQueue(1000) -> [8]tss;
+  input[9] -> q9::RandomQueue(1000) -> [9]tss;
   tss -> output;
 }
 
