@@ -2,6 +2,7 @@
  * randomsimulator.{cc,hh} 
  * iizke 
  */
+#include <click/glue.hh>
 #include <stdio.h>
 #include <stdlib.h>
 //#include <time.h>
@@ -104,8 +105,13 @@ double RandomSimulator::generate_uniform_rv() {
   struct timezone tz;
   
   gettimeofday(&tv, &tz);
+  /*
   srand(tv.tv_usec);
   int rv = random() % MAX_RANGE;
+  */
+  click_srandom(tv.tv_usec);
+  int rv = click_random(1, MAX_RANGE);
+  
   double ret = (double)rv/(double)MAX_RANGE;
   return ret;
 }

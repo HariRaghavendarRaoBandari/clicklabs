@@ -97,9 +97,9 @@ source::RandInfiniteSource(DATA \<
   -> c2::Counter(COUNT_CALL)
 	-> Discard;
 
-lostp_percent::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.count) ) ); 
-lostp_estimation::Script(TYPE PASSIVE, return $(div $(mul $(e.p_bit_error) $(c1.byte_count) 8 ) $(c1.count)) );
+autoupdate_lostp_percent::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.count) ) ); 
+autoupdate_lostp_estimation::Script(TYPE PASSIVE, return $(div $(mul $(e.p_bit_error) $(c1.byte_count) 8 ) $(c1.count)) );
 // this estimation is correct if: P_BIT_ERROR * PACKET_SIZE < 1
-real_bit_error::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.byte_count) 8) );
+autoupdate_real_bit_error::Script(TYPE PASSIVE, return $(div $(sub $(c1.count) $(c2.count)) $(c1.byte_count) 8) );
 
 
