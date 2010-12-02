@@ -53,6 +53,6 @@ if [ -f $FILEDIR/visual-clicky.sh ]; then
     echo $EXPSTR >> ~/.bashrc
   fi
 fi
-exit
+
 source $FILEDIR/update-elements.sh
 

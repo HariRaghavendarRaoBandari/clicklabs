@@ -8,9 +8,9 @@ elementclass LeakyBucket {
 }
 
 elementclass UncontrolledFlow {
-  s::InfiniteSource(LENGTH 100, LIMIT -1, ACTIVE true, STOP true)
+  s::InfiniteSource(LENGTH 100, LIMIT -1, ACTIVE true, STOP true, BURST 100)
     // Random length
-    -> sl::Script(TYPE PACKET, write s.length $(add 500 $(mod $(random) 1000)))
+    //-> sl::Script(TYPE PACKET, write s.length $(add 500 $(mod $(random) 1000)))
     // Random rate
     -> link::BandwidthRatedUnqueue(10Mbps)
     -> output;
@@ -24,4 +24,4 @@ elementclass UncontrolledFlow {
 
 flow::UncontrolledFlow;
 
-flow -> LeakyBucket(MAXBW 15Mbps, SIZE 1000) -> Discard;
+flow -> c1::Counter -> LeakyBucket(MAXBW 15Mbps, SIZE 1000) -> c2::Counter -> TimedSink(10ms);// -> Discard;
