@@ -70,10 +70,10 @@ Print { display: passthrough; }
 //RoundRobinSched {flow-split: ab/ab; }
 
 RatedSource {
-  text: "%n\n<b>%{count}</b>\n<small>%c</small>";
+  text: "%n\n<b>%{rate}packets/s</b>\n<small>%c</small>";
 }
 RatedSource:hover {
-    text: "<b>%{rate} packets/s</b>";
+    text: "<b>%{count}</b>";
 }
 
 BandwidthRatedUnqueue {
