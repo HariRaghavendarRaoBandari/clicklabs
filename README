@@ -1,0 +1,48 @@
+1. File organization:
+---------------------
+
+  elements/
+    This directory contains all the additional click elements using in the lab.
+
+  update-elements.sh
+    Run this file to update the new elements implemented in directory elements
+    (above). For more information, type: ./update-elements.sh -h
+
+  visual-clicky.sh
+    Shell script to visualize click experiment using clicky. For more
+    information, type: ./visual-clicky.sh -h
+
+  init.sh
+    Initialize Click environment for lab. Just run init.sh in the first time
+    you get this source or click source directory changed. 
+
+  1-test-config/
+
+  2-tcp-udp-generation/
+
+  3-shaper-policer/
+
+  4-scheduler/
+
+2. Some introductions before surfing click configurations:
+----------------------------------------------------------
+
+  i. First of all, initialize the click environment for these stuffs. 
+  Run file init.sh:
+    chmod +x init.sh
+    ./init.sh
+  Normally, init process takes long time for the first finding Click source
+  path. To save time, you can create file ~/.clickrc with the content similar
+  to this:
+
+  export CLICK_SRC=/home/iizke/click/click-1.8.0
+    
+  ii. While finishing to code some Click elements, put it in directory
+  'elements', and then run file update-elements.sh to compile and install new
+  elements:
+    chmod +x update-elements.sh
+    update-elements.sh
+
+  iii. Explore the click configuration by using tool visual-clicky.sh. Simple
+  way to use:
+    visual-clicky.sh -f $CLICK_CONFIGURATION_FILE
