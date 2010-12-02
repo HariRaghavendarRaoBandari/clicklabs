@@ -9,7 +9,7 @@ Queue {
 }
 
 Counter {
-	text: "%n\n<b>%{byte_rate} Bps</b>\n<small>%c</small>";
+	text: "%n\n<b>%{bit_rate}bps</b>\n<small>%c</small>";
 }
 
 Counter:hover {

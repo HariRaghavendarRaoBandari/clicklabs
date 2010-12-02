@@ -53,6 +53,6 @@ if [ "$CLICK_FILE" = "" ]; then
   exit 0
 fi
 
-click -R -p $PORT -f $CLICK_FILE & 
+click --no-warnings -R -p $PORT -f $CLICK_FILE & 
 sleep 1
 clicky -p $PORT -s $CCSS_FILE 
