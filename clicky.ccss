@@ -27,7 +27,7 @@ Counter handler#*count {
 }
 
 Counter handler#*rate {
-  autorefresh: 1s;
+  autorefresh: 2s;
 }
 
 * handler#count {
@@ -93,5 +93,5 @@ BandwidthShaper handler#rate {
 }
 
 LinkUnqueue {
-  text: "%n\n<b>%{bandwidth}bps</b>\n<small>%c</small>";
+  text: "%n\n<b>%{bandwidth} Bps</b>\n<small>%c</small>";
 }
