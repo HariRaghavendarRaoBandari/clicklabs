@@ -1,5 +1,6 @@
 // RandomPull_Sched.click
-// Simulate Random FIFO scheduler with at most 10 inputs (flows)
+// Simulate Random scheduler with at most 10 inputs (flows)
+// using Script and PullSwitch
 
 elementclass RandomPullSched {
   //tss::TimeSortedSched;
