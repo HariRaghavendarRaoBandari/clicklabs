@@ -38,6 +38,10 @@ Counter handler#*rate {
 	autorefresh: 1s;
 }
 
+Script handler.read {
+  autorefresh: off;
+}
+
 Script[name*=autoupdate] {
   text: "%n\n<b>%{run}</b>\n<small>%c</small>";
 }
@@ -106,4 +110,12 @@ LinkUnqueue {
 
 RatedUnqueue {
   text: "%n\n<b>%{rate} pps</b>\n<small>%c</small>";
+}
+
+Discard {
+  text: "<small>Drop packet</small>\n<b>count = %{count}</b>"
+}
+
+RatedSplitter {
+  text: "<small>Rate splitter</small>\n<b>rate = %{rate}</b>"
 }
