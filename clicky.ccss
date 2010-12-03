@@ -1,7 +1,5 @@
-// test3.ccss
-
-// This Clicky Cascading Style Sheets file is designed to go with
-// test3.click, and shows off how Clicky works with live configurations.
+// Hope: This Clicky Cascading Style Sheets file is designed to go with
+// all click configuration, and shows off how Clicky works with live configurations.
 
 * {
   orientation: horizontal;
