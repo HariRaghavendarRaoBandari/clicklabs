@@ -5,6 +5,10 @@
   orientation: horizontal;
 }
 
+* handler.read {
+  autorefresh: 2s;
+}
+
 *Queue {
   decorations: fullness;
   text: "%n\n<b>%{length}/%{capacity}</b>\n<small>%c</small>";
@@ -70,6 +74,10 @@ RandomBitErrors {
 Print { display: passthrough; }
 
 //RoundRobinSched {flow-split: ab/ab; }
+
+InfiniteSource {
+  text: "%n\n<b>len = %{length}\nburst = %{burst}</b>\n<small>%c</small>"
+}
 
 RatedSource {
   text: "%n\n<b>%{rate}packets/s</b>\n<small>%c</small>";
