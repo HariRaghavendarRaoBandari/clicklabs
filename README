@@ -16,6 +16,10 @@
     Initialize Click environment for lab. Just run init.sh in the first time
     you get this source or click source directory changed. 
 
+  clicky.ccss
+    File supporting Clicky Cascading Style Sheets. It controls the appearance of a
+    Clicky diagram with style sheets written in a CSS-like language.
+
   1-test-config/
 
   2-tcp-udp-generation/
@@ -27,22 +31,26 @@
 2. Some introductions before surfing click configurations:
 ----------------------------------------------------------
 
-  i. First of all, initialize the click environment for these stuffs. 
+  [i]. First of all, initialize the click environment for these stuffs. 
   Run file init.sh:
+
     chmod +x init.sh
     ./init.sh
+  
   Normally, init process takes long time for the first finding Click source
   path. To save time, you can create file ~/.clickrc with the content similar
   to this:
 
   export CLICK_SRC=/home/iizke/click/click-1.8.0
     
-  ii. While finishing to code some Click elements, put it in directory
+  [ii]. While finishing to code some Click elements, put it in directory
   'elements', and then run file update-elements.sh to compile and install new
   elements:
+    
     chmod +x update-elements.sh
     update-elements.sh
 
-  iii. Explore the click configuration by using tool visual-clicky.sh. Simple
+  [iii]. Explore the click configuration by using tool visual-clicky.sh. Simple
   way to use:
+    
     visual-clicky.sh -f $CLICK_CONFIGURATION_FILE

@@ -67,7 +67,7 @@ elementclass WRRSched {
 //    write bs2.rate $(div $(mul $(link.bandwidth) 3) 10),
 //    write bs3.rate $(div $(mul $(link.bandwidth) 4) 10) );
 }
-Sched::WRRSched(RECONFIGTIME 1.61803);
+Sched::WRRSched(RECONFIGTIME 0.161803);
 
 // Initialize flows
 s0::RatedSource(LENGTH 1000, RATE 125, ACTIVE true);
