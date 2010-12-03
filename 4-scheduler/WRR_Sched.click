@@ -112,7 +112,6 @@ s9 -> Paint(9) -> [9]Sched;
 Sched
   //Pull-to-Push Converter
   -> link::LinkUnqueue(10000us, 55Mbps) 
-  //-> Script(TYPE PACKET, write bs0.rate $(div $(link.bandwidth) 10))
   -> ps::PaintSwitch;
 
 ps[0] -> c0::Counter -> Discard;
