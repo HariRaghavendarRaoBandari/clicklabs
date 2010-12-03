@@ -2,26 +2,36 @@
 // Simulate traffic policy: leaky bucket
 
 elementclass LeakyBucket {
-  MAXBW $maxbw, SIZE $size |
+  INTERVAL $i, RATE $rate, SIZE $size |
 
-  input -> Queue ($size) -> BandwidthShaper($maxbw) -> output;
+  // Using TimedUnqueue
+  // 100%CPU
+  //uq::TimedUnqueue(INTERVAL $i, BURST 1);
+
+  // Using RatedUnqueue
+  // also 100%CPU but rate can be changed
+  uq::RatedUnqueue(RATE $rate);
+  
+  input -> Queue ($size) -> uq -> output;
 }
 
 elementclass UncontrolledFlow {
-  s::InfiniteSource(LENGTH 100, LIMIT -1, ACTIVE true, STOP true, BURST 100)
-    // Random length
-    //-> sl::Script(TYPE PACKET, write s.length $(add 500 $(mod $(random) 1000)))
-    // Random rate
-    -> link::BandwidthRatedUnqueue(10Mbps)
+  s::InfiniteSource(LENGTH 100, LIMIT -1, ACTIVE true, STOP true, BURST 1)
+    -> link::RatedUnqueue(RATE 1000)
     -> output;
 
-  sb::Script(TYPE ACTIVE, 
-             wait 2,
-             set bw $(add $(mod $(random) 10000) 10000),
-             write link.rate $(bw)bps,
-             loop );
+  change_rate::Script(TYPE ACTIVE, 
+              wait 4,
+              set r $(add $(mod $(random) 5000) 900),
+              write link.rate $r,
+              loop );
+  change_burst::Script(TYPE ACTIVE, 
+              wait 1,
+              set r $(add $(mod $(random) 10) 1),
+              write s.burst $r,
+              loop);
 }
 
 flow::UncontrolledFlow;
 
-flow -> c1::Counter -> LeakyBucket(MAXBW 15Mbps, SIZE 1000) -> c2::Counter -> TimedSink(10ms);// -> Discard;
+flow -> c1::Counter -> LeakyBucket(INTERVAL 1ms, RATE 1000, SIZE 1000) -> c2::Counter -> Discard;

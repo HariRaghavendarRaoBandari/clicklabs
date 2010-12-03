@@ -95,3 +95,7 @@ BandwidthShaper handler#rate {
 LinkUnqueue {
   text: "%n\n<b>%{bandwidth} Bps</b>\n<small>%c</small>";
 }
+
+RatedUnqueue {
+  text: "%n\n<b>%{rate} pps</b>\n<small>%c</small>";
+}
