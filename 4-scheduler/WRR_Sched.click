@@ -6,6 +6,15 @@ elementclass WRRSched {
   //Simulate WRR using RR with number of input ports is: sum(1 -> 10) = 55
 
   rrs::RoundRobinSched;
+  //input[1] -> rs1::RandomSwitch;
+  //input[2] -> rs2::RandomSwitch;
+  //input[3] -> rs3::RandomSwitch;
+  //input[4] -> rs4::RandomSwitch;
+  //input[5] -> rs5::RandomSwitch;
+  //input[6] -> rs6::RandomSwitch;
+  //input[7] -> rs7::RandomSwitch;
+  //input[8] -> rs8::RandomSwitch;
+  //input[9] -> rs9::RandomSwitch;
   input[1] -> rs1::RandomSwitch;
   input[2] -> rs2::RandomSwitch;
   input[3] -> rs3::RandomSwitch;
@@ -14,7 +23,7 @@ elementclass WRRSched {
   input[6] -> rs6::RandomSwitch;
   input[7] -> rs7::RandomSwitch;
   input[8] -> rs8::RandomSwitch;
-  input[9] -> rs9::RandomSwitch;
+  input[9] -> rs9::RoundRobinSwitch;
   //weight 1
   input[0] -> Queue(1000) -> [29]rrs;
   //weight 2
