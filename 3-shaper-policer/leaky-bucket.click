@@ -4,28 +4,28 @@
 elementclass LeakyBucketPolicer {
   RATE $rate, SIZE $size |
 
-  // Using RatedUnqueue
-  // also 100%CPU but rate can be changed
-  uq::RatedUnqueue(RATE $rate);
   rs::RatedSplitter(RATE $rate);
   input -> rs;
-  rs[0] -> Queue($size) -> uq -> output;
+  rs[0] -> output;
   rs[1] -> Discard;
 
-  autoupdate_changerate1::Script(TYPE PASSIVE, write uq.rate $(rs.rate));
 }
 
 elementclass LeakyBucketShaper {
   SIZE $size, RATE $rate |
   
-  input 
-    -> Queue($size)
+  input
+    -> red::RED(100, $size, 0.01)
+    -> q::Queue($size)
     -> shaper::RatedUnqueue(RATE $rate)
     -> rs::RatedSplitter(RATE $rate);
     rs[0] -> output;
     rs[1] -> Discard;
 
-  autoupdate_changerate2::Script(TYPE PASSIVE, write shaper.rate $(rs.rate));
+  autoupdate_changerate::Script(TYPE PASSIVE, write shaper.rate $(rs.rate));
+  autoupdate_changesize::Script(TYPE PASSIVE, 
+                                write red.min_thresh $(mul $(q.capacity) 0.1),
+                                write red.max_thresh $(mul $(q.capacity) 0.9));
 }
 
 elementclass UncontrolledFlow {
