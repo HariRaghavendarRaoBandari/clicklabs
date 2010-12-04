@@ -53,4 +53,4 @@
   [iii]. Explore the click configuration by using tool visual-clicky.sh. Simple
   way to use:
     
-    visual-clicky.sh -f $CLICK_CONFIGURATION_FILE
+    visual-clicky.sh $CLICK_CONFIGURATION_FILE
