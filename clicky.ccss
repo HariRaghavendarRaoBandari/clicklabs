@@ -116,6 +116,10 @@ Discard {
   text: "<small>Drop packet</small>\n<b>count = %{count}</b>"
 }
 
-RatedSplitter {
+*RatedSplitter {
   text: "<small>Rate splitter</small>\n<b>rate = %{rate}</b>"
+}
+
+RED {
+  text: "%n\n<b><small>%{stats}\n%c</small></b>"
 }
