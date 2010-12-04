@@ -1,5 +1,4 @@
 // Counter_test.click 
-// iizke
 
 Script(TYPE ACTIVE, wait 2);
 // Compound element

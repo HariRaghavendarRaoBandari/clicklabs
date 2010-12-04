@@ -53,19 +53,40 @@ elementclass UncontrolledFlow {
   s1 -> q::Queue($burst) -> [1]p;
   s0 -> [0]p;
 
-  p 
-    -> Script(TYPE PACKET, write p.switch $(if $(lt $(mod $(random) 10) 4) 1 0))
-    -> Unqueue
+  p
+    -> Script(TYPE PACKET,
+              goto END1 $(eq $(s0.active) false),
+              goto END0 $(eq $(s1.active) false),
+              goto END1 $(lt $(mod $(random) 10) 4),
+              label END0,
+              write p.switch 0,
+              goto END,
+              label END1,
+              write p.switch 1,
+              label END)
+    -> Unqueue(BURST $burst)
     -> output;
 
   autoupdate_change_rate::Script (TYPE PASSIVE, 
-                set r $(add $(mod $(random) 2000) 800),
-                write s0.rate $r,
+                set r $(add $(mod $(random) $rate) 800),
+                write s0.rate $r, 
                 write s1.rate $r);
   autoupdate_change_burst::Script (TYPE PASSIVE,
-                set b $(add $(mod $(random) 10) 1),
+                set b $(add $(mod $(random) $burst) 2), 
                 write q.capacity $b);
+  autoupdate_switch::Script (TYPE PASSIVE, 
+              goto END1 $(eq $(s0.active) false),
+              goto END0 $(eq $(s1.active) false),
+              goto END,
+              label END0,
+              write p.switch 0,
+              goto END,
+              label END1,
+              write p.switch 1,
+              label END);
+
 }
+
 
 flow0::UncontrolledFlow(RATE 1000, BURST 10);
 flow1::UncontrolledFlow(RATE 1000, BURST 10);

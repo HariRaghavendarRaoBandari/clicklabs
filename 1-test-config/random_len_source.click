@@ -1,5 +1,4 @@
 // random_len_source.click 
-// iizke
 
 // Print TIMESTAMP
 elementclass PTimestampQueue {

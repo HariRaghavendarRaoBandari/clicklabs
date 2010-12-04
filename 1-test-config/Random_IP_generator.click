@@ -1,5 +1,4 @@
 // Random_IP_generator.click 
-// iizke
 
 // Print TIMESTAMP
 elementclass PTimestampQueue {

@@ -18,21 +18,24 @@ usage () {
     Shell script to visualize click experiment using clicky
 
     ${bold}SYNOPSIS${txtrst}
-      ${txtylw}${bold}visual_clicky.sh  -f | --file${txtrst} CLICK_PATH_FILE
-                       [${txtylw}${bold}-p | --port${txtrst} PORT]
-                       [${txtylw}${bold}-s | --ccss${txtrst} CCSS_FILE]
-                       [${txtylw}${bold}-h${txtrst}]"
+      ${txtylw}${bold}visual_clicky.sh  [-f | --file${txtrst}] CLICK_PATH_FILE
+                        [${txtylw}${bold}-p | --port${txtrst} PORT]
+                        [${txtylw}${bold}-s | --ccss${txtrst} CCSS_FILE]
+                        [${txtylw}${bold}-h${txtrst}]"
                 
 }
 
 option_config_add "-h" "HELP" "0" "Help on visual-clicky"
 option_config_add "--help" "HELP" "0" "Help on visual-clicky"
 option_config_add "-f" "CLICK_FILE" "1" "Click file"
+#nil-option: _ (no need option)
+option_config_add "_" "CLICK_FILE" "1" "Click file"
 option_config_add "--file" "CLICK_FILE" "1" "Click file"
 option_config_add "-p" "PORT" "1" "Port"
 option_config_add "--port" "PORT" "1" "Port"
 option_config_add "-s" "CCSS_FILE" "1" "CCSS File used to make decoration on clicky"
 option_config_add "--ccss" "CCSS_FILE" "1" "CCSS File used to make decoration on clicky"
+
 option_parse "$@"
 
 if [ "$HELP" == "true" ]; then

@@ -1,5 +1,5 @@
 // UDP_TCP_generator.click 
-// iizke
+
 
 elementclass TimedSourceQueue {
 	RATE $rate, SIZE $buffer_size |

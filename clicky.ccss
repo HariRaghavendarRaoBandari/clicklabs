@@ -104,6 +104,10 @@ BandwidthShaper handler#rate {
   autorefresh: 0.5s;
 }
 
+Unqueue {
+  text: "%n\n<b>Burst = %{burst}</b>\n<small>%c</small>";
+}
+
 LinkUnqueue {
   text: "%n\n<b>%{bandwidth} Bps</b>\n<small>%c</small>";
 }

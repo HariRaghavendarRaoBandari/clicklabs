@@ -570,14 +570,30 @@ option_parse () {
   local i=0
   local optlen=${#allopt[@]}
   local optvalslen=${#OPT_VALS[@]}
+  local now_nilopt_pos=0
 
   for ((i=0;i<$optlen;i++)); do
     flag="${allopt[i]}"
+    local nilopt_pos=0
+    local nilopt_var=""
+    local nilopt_val=""
+
     for ((j=0;j<$optvalslen;j+=4)); do
       local opt="${OPT_VALS[j]}"
       local val="${OPT_VALS[j+1]}"
       local has_arg="${OPT_VALS[j+2]}"
       local meaning="${OPT_VALS[j+3]}"
+
+      if [ "$opt" == "_" ]; then
+        if [ "${nilopt_pos}" == "${now_nilopt_pos}" ]; then
+          nilopt_var=$val
+          if [ "$nilopt_var" != "" ]; then
+            printf -v nilopt_val %b "${flag}"
+          fi
+        fi
+        nilopt_pos=$((nilopt_pos+1))
+        continue
+      fi
 
       if [ "$flag" == "$opt" ]; then 
         if [ "$has_arg" == "1" ]; then
@@ -596,7 +612,12 @@ option_parse () {
       fi
     done
     if [ "$j" == "$optvalslen" ]; then
-      print_warn "Option $flag is not supported."
+      if [ "$nilopt_val" == "" ]; then
+        print_warn "Option $flag is not supported."
+      else
+        printf -v $nilopt_var %b "${nilopt_val}"
+        now_nilopt_pos=$((now_nilopt_pos+1))
+      fi
     fi
   done
 }
