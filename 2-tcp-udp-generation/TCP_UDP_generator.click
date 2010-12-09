@@ -1,10 +1,10 @@
 // UDP_TCP_generator.click 
 
-
 elementclass TimedSourceQueue {
 	RATE $rate, SIZE $buffer_size |
-  t::TimedSource();
-  s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
+  //t::TimedSource();
+  t::TCPIPSend;
+  //s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
   t
   -> Queue($buffer_size)
 	-> output
