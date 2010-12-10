@@ -622,5 +622,71 @@ option_parse () {
   done
 }
 
-usage_print() {
+option_usage_print() {
+  local optvalslen=${#OPT_VALS[@]}
+  local description=""
+  local exefile=""
+  for ((j=0;j<$optvalslen;j+=4)); do
+    local opt="${OPT_VALS[j]}"
+    local val="${OPT_VALS[j+1]}"
+    local has_arg="${OPT_VALS[j+2]}"
+    local meaning="${OPT_VALS[j+3]}"
+    if [ "$opt" == "DESCRIPTION" ]; then
+      description=$meaning
+      exefile=$val
+      break
+    fi
+  done
+
+  echo -e "\
+
+   ${bold}DESCRIPTION${txtrst}
+     ${description}
+   
+   ${bold}SYNOPSIS${txtrst}
+     ${txtylw}${bold}${exefile}${txtrst}
+   "
+
+  for ((j=0;j<$optvalslen;j+=4)); do
+    local opt="${OPT_VALS[j]}"
+    local val="${OPT_VALS[j+1]}"
+    local has_arg="${OPT_VALS[j+2]}"
+    local meaning="${OPT_VALS[j+3]}"
+    if [ "$has_arg" == "1" ]; then
+      has_arg="ARG"
+    else
+      has_arg=""
+    fi
+    #Null opt
+    if [ "$opt" == "_" ]; then
+      opt=""
+    fi
+
+    if [ "$opt" != "DESCRIPTION" ]; then
+      echo -e "\
+          ${txtylw}${bold}${opt}${txtrst} ${txtylw}${has_arg}${txtrst} 
+              $meaning
+              "
+    fi  
+  done
 }
+
+######################################################
+
+find_file_in_dirset () {
+  #dirset delimiter is ':'
+  local FILE=$1
+  local DIRSET=$2
+  local NDIRS=`echo $DIRSET | awk -F : '{print NF}'`
+  for (( i=1;i <=$NDIRS;i++ )); do
+    #get n-th dir in dirlist
+    local dir=`echo $DIRSET:$i | awk -F : '{print $$NF}'`
+    #find FILE in this dir
+    local result=`find $dir -print 2>/dev/null | grep "$FILE$" 2>/dev/null | head -1`
+    if [ "$result" != "" ]; then
+      echo $result
+      return
+    fi
+  done
+}
+

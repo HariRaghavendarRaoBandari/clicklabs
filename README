@@ -54,3 +54,23 @@
   way to use:
     
     visual-clicky.sh $CLICK_CONFIGURATION_FILE
+
+  [iv]. To support easy-reading and team-working activities, we developed a tool 
+  to allow including some click files into a click file. If you write some click
+  files as library files, you can reuse it by using 'include statement'. For
+  example, we have TCP_Source.click to implement a TCP-generator, and
+  UDP_Source.click to implement an UDP-generator. In TCP_UDP.click, we want
+  reuse the implementation of these generator, we can write in click file
+  these lines:
+  ------------------------ file: TCP_UDP.click ---------------------------
+  //#include "TCP_Source.click"
+  //#include "UDP_Source.click"
+  ...
+  ------------------------------------------------------------------------
+  The syntax of include statement is simple: //#include "CLICK_PATH"
+  CLICK_PATH can be relative or absolute path.
+  After that, you have to use our tool (eclick-compile.sh) to precompile this
+  file before simulating it by CLICK, for example:
+    eclick-compile.sh -o extend-TCP_UDP.click [-f] TCP_UDP.click
+  Note: if using tool visual-clicky.sh, you don't have to pre-compile the
+  extended-click file.
