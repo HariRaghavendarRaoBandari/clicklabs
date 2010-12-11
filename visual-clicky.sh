@@ -7,6 +7,7 @@ source $FILEDIR/tools/libfuncs.sh 2>/dev/null
 clean () {
   killall -9 click 2>/dev/null
   killall -9 clicky 2>/dev/null
+  rm -f $ECLICK_FILE 2>/dev/null
 }
 
 trap clean 2 EXIT SIGTERM
@@ -56,6 +57,12 @@ if [ "$CLICK_FILE" = "" ]; then
   exit 0
 fi
 
-click --no-warnings -R -p $PORT -f $CLICK_FILE 1>/dev/null & 
+#Support Extended-Click file
+ECLICK_FILE=/tmp/`date +%s`-`basename $CLICK_FILE`
+#Generate normal click file from extended-click file
+eclick-compile.sh -f $CLICK_FILE -o $ECLICK_FILE
+#Click
+click --no-warnings -R -p $PORT -f $ECLICK_FILE 1>/dev/null & 
 sleep 1
 clicky -p $PORT -s $CCSS_FILE 2>/dev/null 
+rm -f $ECLICK_FILE 2>/dev/null

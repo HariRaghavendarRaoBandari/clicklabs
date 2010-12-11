@@ -13,7 +13,7 @@ elementclass TCP_Generator {
     01 00 00 00    00 00 00 00  00 80 04 08  00 80 04 08  53 53 00 00
     53 53 00 00    05 00 00 00  00 10 00 00  01 00 00 00  54 53 00 00
     54 e3 04 08    54 e3 04 08  d8 01 00 00
-    >, LIMIT 600000, STOP true)
+    >, LIMIT -1, STOP true)
 
   -> IPEncap(PROTO 6, SRC $src, DST $dst)
   -> SetTCPChecksum
@@ -22,5 +22,5 @@ elementclass TCP_Generator {
 }
 
 TCP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050, DSTPORT 0050)
-  -> Print("tcp", MAXLENGTH 52)
+  -> Print("tcp", MAXLENGTH 52, ACTIVE false)
   -> Discard;

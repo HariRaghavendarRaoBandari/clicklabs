@@ -16,6 +16,12 @@
     Initialize Click environment for lab. Just run init.sh in the first time
     you get this source or click source directory changed. 
 
+  eclick-compile.sh
+    Extend the Click file. A click file can include another one to reuse some
+    compound elements (similar include in C, or import in Java). File
+    eclick-compile.sh is used to translate (or flatten) these extended-click
+    file to a normal click file.
+
   clicky.ccss
     File supporting Clicky Cascading Style Sheets. It controls the appearance of a
     Clicky diagram with style sheets written in a CSS-like language.

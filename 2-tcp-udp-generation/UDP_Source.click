@@ -13,7 +13,7 @@ elementclass UDP_Generator {
     01 00 00 00   00 00 00 00  00 80 04 08  00 80 04 08  53 53 00 00
     53 53 00 00   05 00 00 00  00 10 00 00  01 00 00 00  54 53 00 00
     54 e3 04 08   54 e3 04 08  d8 01 00 00
-    >, LIMIT 600000, STOP true) 
+    >, STOP true) 
   -> IPEncap(PROTO 0x11, SRC $src, DST $dst)
   -> SetUDPChecksum
   -> EtherEncap(0x0800, 1:1:1:1:1:1, 2:2:2:2:2:2)
@@ -29,6 +29,5 @@ elementclass UDP_Generator {
 //  -> Discard;
 
 UDP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050, DSTPORT 0050)
-  -> Print("udp2", MAXLENGTH 52)
-  -> Script (TYPE PACKET, wait 1s)
+  //-> Print("udp2", MAXLENGTH 52, ACTIVE true)
   -> Discard;
