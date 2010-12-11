@@ -35,10 +35,17 @@ if [ "$HELP" == "true" ]; then
   exit 0
 fi
 
-#Setting PATH for visual-click
+#Setting environment variables
 if [ -f $FILEDIR/visual-clicky.sh ]; then
+  #Setting PATH for visual-click
   EXPSTR="export PATH=\$PATH:$FILEDIR"
   count=`cat ~/.bashrc|grep -e "export PATH=\\\$PATH:$FILEDIR"|wc -l`
+  if [ $count -eq 0 ]; then
+    echo $EXPSTR >> ~/.bashrc
+  fi
+  #Setting .clickrc for click
+  count=`cat ~/.bashrc|grep "source ~/.clickrc" | wc -l`
+  EXPSTR="source ~/.clickrc"
   if [ $count -eq 0 ]; then
     echo $EXPSTR >> ~/.bashrc
   fi
@@ -69,5 +76,14 @@ if [ "$CLICK_SRC" == "" ]; then
   echo "export CLICK_SRC=${CLICK_SRC}" > ~/.clickrc
 fi
 
+#Setting CLICK_INCLUDE_PATH for 'include' in click configuration
+count=`cat ~/.clickrc | grep "export CLICK_INCLUDE_PATH" | wc -l`
+if [ $count -eq 0 ]; then
+  echo "export CLICK_INCLUDE_PATH=${FILEDIR}/1-test-config:${FILEDIR}/2-tcp-udp-generation:${FILEDIR}/3-shaper-policer:${FILEDIR}/4-scheduler" >> ~/.clickrc
+fi
+#Update new elements
 source $FILEDIR/update-elements.sh
 
+#Finish
+print_warn "Now, you need to open and work in a new console to use new
+environment supporting CLICK. Good luck."
