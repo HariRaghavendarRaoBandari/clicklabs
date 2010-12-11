@@ -119,7 +119,10 @@ get_abs_path () {
 	if [ -e "$_p" ]; then
 		_basen=`basename $_p`
 		_dirn=`dirname $_p`
-		cd $_dirn
+		cd $_dirn 
+    if [ $? -ne 0 ]; then
+      return
+    fi
 		echo `pwd`/$_basen
 		cd $_curdir
 	fi

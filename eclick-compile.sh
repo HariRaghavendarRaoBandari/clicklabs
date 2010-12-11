@@ -56,17 +56,56 @@ else
   CLICK_INCLUDE_PATH=.:`dirname $ECLICK_FILE`:$CLICK_INCLUDE_PATH
 fi
 
-#Get included files in ECLICK file
-INCLUDED_FILES=`cat $ECLICK_FILE | grep "//#include" | awk '{print $2}'`
+#Build included file list
+INCLUDED_FILES=""
+build_included_list () {
+  local f=""
+  local ff=""
+  local head_file=$1
+  local new_included=`cat $head_file | grep "//#include" | awk '{print $2}'`
+  
+  #stop condition of recursive building included list
+  if [ "$new_included" == "" ]; then
+    return 
+  fi
+  
+  for f in $new_included; do  
+    #remove " in file name
+    f=`echo $f | sed -e 's/^"//g' -e 's/"$//g'`
+    #find full path of include file
+    ff=`find_file_in_dirset "$f" "$CLICK_INCLUDE_PATH"`
+    ff=`get_abs_path "$ff"`
+    if [ "$ff" == "" ]; then
+      print_error "The include file $f in file $head_file cannot be found. You
+      may check CLICK_INCLUDE_PATH."
+      exit
+    fi
+    #check and remove the existing ff in included_files list
+    INCLUDED_FILES=`echo $INCLUDED_FILES:$ff | awk -F : '{
+                                          ns = ""; 
+                                          split($0, a, ":");
+                                          for (i = 0; i < NF; i++) { 
+                                            if (a[i] != a[NF]){
+                                              ns == "" ? ns = a[i] : ns = ns":"a[i]
+                                            }
+                                          };
+                                          print ns }'`
+    #insert ff into INCLUDED_FILES 
+    INCLUDED_FILES=$INCLUDED_FILES:$ff
+    #recursive the build
+    build_included_list "$ff"
+  done
 
-#Generate compiled click file
-for f in $INCLUDED_FILES; do 
-  #find the included click file
-  f=`echo $f | sed -e 's/^"//g' -e 's/"$//g'`
-  f=`find_file_in_dirset "$f" "$CLICK_INCLUDE_PATH"`
-  cat `echo $f | sed -e 's/^"//g' -e 's/"$//g'` >> $OUTPUT
+}
+
+#Build included list: is stored in INCLUDED_FILES
+build_included_list "$ECLICK_FILE"
+
+#Now, create complete - flat click file
+for f in `echo $INCLUDED_FILES | sed -e 's/:/\n/g'`; do 
+  cat "$f" >> $OUTPUT
   if [ $? -ne 0 ]; then
-    rm -f $OUTPUT
+    rm -f $OUTPUT 2>/dev/null
     exit -1
   fi
 done
