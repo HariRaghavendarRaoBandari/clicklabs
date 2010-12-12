@@ -3,9 +3,12 @@
 
 elementclass UDP_Generator {
   // Note: SRCPORT and DSTPORT: string number (4 characters) with hexa layout.
-  SRC $src, DST $dst, SRCPORT $sport, DSTPORT $dport|
+  SRC $src, DST $dst, SRCPORT $sport, DSTPORT $dport,
+  RATE $rate, SIZE $buffer_size  |
   
-  InfiniteSource(DATA \<
+  s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
+
+  t::TimedSource(DATA \<
     // UDP header
     $sport $dport 00 14 d6 41
     // UDP payload
@@ -17,6 +20,7 @@ elementclass UDP_Generator {
   -> IPEncap(PROTO 0x11, SRC $src, DST $dst)
   -> SetUDPChecksum
   -> EtherEncap(0x0800, 1:1:1:1:1:1, 2:2:2:2:2:2)
+  -> Queue($buffer_size)
   -> output;
 }
 
@@ -28,6 +32,7 @@ elementclass UDP_Generator {
 //  -> Script(TYPE PACKET, wait 1s)
 //  -> Discard;
 
-UDP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050, DSTPORT 0050)
-  //-> Print("udp2", MAXLENGTH 52, ACTIVE true)
-  -> Discard;
+//UDP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050, DSTPORT 0050, 
+//               RATE 1000, SIZE 100)
+//  -> Print("udp2", MAXLENGTH 52, ACTIVE true)
+//  -> Discard;

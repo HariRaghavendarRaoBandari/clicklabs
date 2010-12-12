@@ -4,21 +4,23 @@
 //#include "TCP_Source.click"
 //#include "UDP_Source.click"
 
-elementclass TimedSourceQueue {
-	RATE $rate, SIZE $buffer_size |
-  t::TimedSource();
-  //t::TCPIPSend;
-  s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
-  t
-  -> Queue($buffer_size)
-	-> output
-}
+//elementclass TimedSourceQueue {
+//	RATE $rate, SIZE $buffer_size |
+//  t::TimedSource();
+//  //t::TCPIPSend;
+//  s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
+//  t
+//  -> Queue($buffer_size)
+//	-> output
+//}
 
 // This using Round Robin Scheduler
 elementclass TCP_UDP_generator {
   TCP $tcp, UDP $udp |
-  tcpq::TimedSourceQueue(RATE $tcp, SIZE 200);
-  udpq::TimedSourceQueue(RATE $udp, SIZE 200);
+  tcpq::TCP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050,
+                       DSTPORT 0050, RATE $tcp, SIZE 200);
+  udpq::UDP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050,
+                       DSTPORT 0050, RATE $udp, SIZE 200);
   rrsched::RoundRobinSched;
   tcpq[0]
     -> Paint(16)
