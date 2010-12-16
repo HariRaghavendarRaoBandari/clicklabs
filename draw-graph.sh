@@ -91,12 +91,12 @@ fi
 #convert dump file to human readable file (using to plot)
 DUMPFILES=`echo $DUMPFILES | sed -e 's/:/ /g'`
 for f in $DUMPFILES; do
-  if [ "$PACKETCOUNT" == "true" ]; then
-    convert-click-dump.sh -f $f --packet-count -o `basename $f`.convert
-  else
+  #if [ "$PACKETCOUNT" == "true" ]; then
+    convert-click-dump.sh -f $f --packet-count -o `basename $f`.convert.pc
+  #else
     convert-click-dump.sh -f $f -o `basename $f`.convert
-  fi
-  register_tmp_file `basename $f`.convert
+  #fi
+  #register_tmp_file `basename $f`.convert
 done
 
 #prepare gnuplot
@@ -150,18 +150,22 @@ if [ "$YRANGE" == "" ]; then
   #Remove "set xrange" statement
   cat $PLOTSCRIPT | sed -e 's:set yrange:#set yrange:g' > /tmp/tmpfile
   cat /tmp/tmpfile > $PLOTSCRIPT
-else 
-  touch /tmp/tmpfile
-  cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
-  cat /tmp/tmpfile > $PLOTSCRIPT
-  #try to modify XRANGE
+else
   ymin=`echo $YRANGE |awk -F : '{print $1}'`
   ymax=`echo $YRANGE |awk -F : '{print $2}'`
-
+  
+  touch /tmp/tmpfile
+  if [ "$PACKETCOUNT" == "true" ]; then
+    cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
+  else
+    cat $PLOTSCRIPT | sed -e s/YRANGE/0:2/g > /tmp/tmpfile
+  fi
+  cat /tmp/tmpfile > $PLOTSCRIPT
+  #try to modify XRANGE
   xmin=9999999999.9
   xmax=0.1
   for f in $DUMPFILES; do
-    dumpfile_conv=`basename $f`.convert
+    dumpfile_conv=`basename $f`.convert.pc
     t=`find_value_x $dumpfile_conv $ymin`
     if [ `echo "$t < $xmin" |bc` -eq 1 ]; then
       xmin=$t
@@ -179,10 +183,16 @@ fi
 
 count=0
 for f in $DUMPFILES; do
-  if [ $count -eq 0 ]; then
-    PLOTSTR="\"`basename $f`.convert\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+  if [ "$PACKETCOUNT" == "true" ]; then
+    datafile=`basename $f`.convert.pc
   else
-    PLOTSTR=",\"`basename $f`.convert\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    datafile=`basename $f`.convert
+  fi
+
+  if [ $count -eq 0 ]; then
+    PLOTSTR="\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+  else
+    PLOTSTR=",\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
   fi
   count=1
   echo $PLOTSTR >> $PLOTSCRIPT
