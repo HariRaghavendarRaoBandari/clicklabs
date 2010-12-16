@@ -50,11 +50,11 @@ Script[name*=autoupdate] handler#run {
   autorefresh: 1s;
 }
 
-#reset_button {
+reset_button {
   text: "<b>Reset%{run}</b>";
 }
 
-#reset_button handler#run {
+reset_button handler#run {
   autorefresh: off;
 }
 

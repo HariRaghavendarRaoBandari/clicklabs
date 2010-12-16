@@ -1,0 +1,20 @@
+#!/usr/bin/gnuplot
+reset
+set terminal png
+set output "OUTPUT"
+set xlabel "XLABEL"
+set xrange [XRANGE]
+
+set ylabel "YLABEL"
+set yrange [YRANGE]
+
+set title "TITLE"
+set key reverse Left outside
+set grid
+set style data linespoints
+#set style data points
+
+#plot \
+#  "DATA1" using XCOL:YCOL title "DATA1"
+
+plot \
