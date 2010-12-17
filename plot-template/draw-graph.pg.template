@@ -12,7 +12,8 @@ set title "TITLE"
 set key reverse Left outside
 set grid
 #set style data linespoints
-set style data points
+#set style data points
+set style data dots
 
 #plot \
 #  "DATA1" using XCOL:YCOL title "DATA1"

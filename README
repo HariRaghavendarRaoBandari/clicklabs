@@ -4,6 +4,10 @@
   elements/
     This directory contains all the additional click elements using in the lab.
 
+  plot-template/
+    This directory contains templates used for plotting data by gnuplot. These
+    files are used by draw-graph.sh
+
   update-elements.sh
     Run this file to update the new elements implemented in directory elements
     (above). For more information, type: ./update-elements.sh -h
@@ -21,6 +25,16 @@
     compound elements (similar include in C, or import in Java). File
     eclick-compile.sh is used to translate (or flatten) these extended-click
     file to a normal click file.
+
+  convert-click-dump.sh
+    This script used to transform dump files from click (binary files) into
+    text files. Note: this is one-way transformation, the binary files cannot
+    be recovered from the text files.
+
+  draw-graph.sh
+    This script is used to draw graphs from data extracted in CLICK dump
+    files. Just provide the dump files, this script will generate a graph for
+    you. Note: No need to use convert-click-dump.sh before using draw-graph.sh.
 
   clicky.ccss
     File supporting Clicky Cascading Style Sheets. It controls the appearance of a
@@ -73,10 +87,30 @@
   //#include "UDP_Source.click"
   ...
   ------------------------------------------------------------------------
-  The syntax of include statement is simple: //#include "CLICK_PATH"
-  CLICK_PATH can be relative or absolute path.
+  The syntax of include statement is simple: 
+          //#include "CLICK_PATH"
+  where CLICK_PATH can be relative or absolute path.
   After that, you have to use our tool (eclick-compile.sh) to precompile this
   file before simulating it by CLICK, for example:
     eclick-compile.sh -o extend-TCP_UDP.click [-f] TCP_UDP.click
   Note: if using tool visual-clicky.sh, you don't have to pre-compile the
-  extended-click file.
+  extended-click file. It will do automatically.
+
+  [v]. To visualize your packet stream at input or output, we have developed
+  draw-graph.sh to generate graph as picture (using gnuplot). So, before using
+  this function, make sure that you have installed gnuplot. The second, you
+  have to provide the data. Normally, we usually generate data from CLICK with
+  elements ToDump. This data follows the format of tcpdump. When you get the
+  data, the last action you need is running this command:
+
+    draw-graph.sh -f data1.dump -f data2.dump -f data_n.dump 
+      [--packet-count]
+      [--xrange 233:23221]
+      [--yrange 282:2922]
+      [--xlabel XYZ]
+      [--ylabel ABC]
+      [--xcol 2]
+      [--ycol 1]
+
+  This tool is young, so the plot-template is hard code. It will be change to
+  be able to use another templates.

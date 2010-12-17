@@ -13,18 +13,19 @@ elementclass TokenBucketPolicer {
     -> Script(TYPE PACKET, write ps.switch 1)
     -> Discard;
 
+  // This is controller to control the gate (ps pullswitch)
   sw::Switch(0)
   input 
     -> Script(TYPE PACKET, 
                 set t $(tokenq.length), 
                 write sw.switch $(if $(gt $t 0) 0 1), 
                 write ps.switch $(if $(gt $t 0) 0 1)
-                )   
+                )
     -> sw;
-    
-  // Go on output 0
+
+  // Legal packets Go to output 0
   sw[0] -> output;
-  // Die in output 1
+  // Illegal packets Die in output 1
   sw[1] -> Discard;
 }
 
@@ -36,7 +37,7 @@ elementclass TokenBucketShaper {
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
     -> shaper::RatedUnqueue(RATE $rate)
-    -> policer 
+    -> policer
     -> output;
 
   cal_peak_rate::Script(TYPE ACTIVE, write shaper.rate $(mul $rate $burst));
@@ -92,5 +93,11 @@ flow0::UncontrolledFlow(RATE 1000, BURST 10);
 flow1::UncontrolledFlow(RATE 1000, BURST 10);
 
 flow0 -> c1::Counter -> TokenBucketPolicer(RATE 1000, BURST 10) -> c2::Counter -> Discard;
-flow1 -> c3::Counter -> TokenBucketShaper(RATE 1000, BURST 10, SIZE 5000) -> c4::Counter -> Discard;
+flow1
+  -> ToDump(dumpin, SNAPLEN 1)
+  -> c3::Counter 
+  -> TokenBucketShaper(RATE 1000, BURST 10, SIZE 5000) 
+  -> ToDump(dumpout, SNAPLEN 1)
+  -> c4::Counter 
+  -> Discard;
 
