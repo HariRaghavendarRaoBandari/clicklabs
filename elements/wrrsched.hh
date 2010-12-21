@@ -47,6 +47,7 @@ class WRRSched : public Element { public:
     int * _weights;
     int _nweights;
     int _sumwei;
+    int scale; 
     int * _porders;
     int _next;
     NotifierSignal *_signals;

@@ -25,7 +25,7 @@
 CLICK_DECLS
 
 WRRSched::WRRSched()
-    : _next(0), _signals(0), _weights(0), _nweights(0), _porders(0)
+    : _next(0), _signals(0), _weights(0), _nweights(0), _porders(0), scale(1)
 {
 }
 
@@ -38,11 +38,12 @@ WRRSched::~WRRSched()
 int
 WRRSched::initialize(ErrorHandler *errh)
 {
-    if (!(_signals = new NotifierSignal[ninputs()]))
-	return errh->error("out of memory!");
-    for (int i = 0; i < ninputs(); i++)
-	_signals[i] = Notifier::upstream_empty_signal(this, i, 0);
-    return 0;
+  if (!(_signals = new NotifierSignal[ninputs()]))
+  	return errh->error("out of memory!");
+  for (int i = 0; i < ninputs(); i++)
+	  _signals[i] = Notifier::upstream_empty_signal(this, i, 0);
+  scale = 1;
+  return 0;
 }
 
 void
@@ -54,6 +55,15 @@ WRRSched::cleanup(CleanupStage)
 static inline void init_porders (int * porders, int n) {
     for (int i = 0 ; i < n; i++) 
           porders[i] = -1; 
+}
+
+static int find_max(int * array, int len) {
+  int max = 0;
+  for (int i = 0; i < len; i++) {
+    if (array[i] > max) 
+      max = array[i];
+  }
+  return max;
 }
 
 int
@@ -85,35 +95,81 @@ WRRSched::configure(Vector<String> &conf, ErrorHandler *errh)
 	  _sumwei += _weights[i];
   
   // Create port order list
-  _porders = new int[_sumwei];
-  init_porders (_porders, _sumwei);
+  int posize = _sumwei * scale;
+  _porders = new int[posize];
+  if (_porders == 0) {
+    return errh->error("Memory is out with %d integers \n", posize);
+  }
+  init_porders (_porders, posize);
   
-  // distribute ports
+  /* distribute ports
+   * 1st solution:
+   * scattering ports port-by-port (after finishing scattering port_i,
+   * continue with port_i+1
+   */
   for (int i=0; i < _nweights; i++) {
-    double freq = _sumwei / _weights[i];
-    for (int k=0; k < _weights[i]; k++) {
-      int nextp = int(freq * k);
-      if (_porders[nextp] == -1) 
-        // can use this position
-        _porders[nextp] = i;
-      else {
+    double freq = double(_sumwei) / double(_weights[i]);
+    int start = 0;
+    int nextp = 0;
+    //printf("freq = %f \n", freq);
+    for (int k=0; k < (_weights[i] * scale); k++) {
+      nextp = (start + int(freq * k));// % posize;
+      if (_porders[nextp] >= 0) {
         // have to find another one
-        for (int j=nextp+1; j < _sumwei; j++) 
-          if (_porders[j] == -1) {
+        for (int j=0; j < posize; j++) {
+          int pos = (j + nextp - i/2) % posize;
+          if (_porders[pos] == -1) {
             // use this postition and then stop seeking
-            _porders[j] = i;
+            nextp = pos;
             break;
           }
+        }
+      }
+      _porders[nextp] = i;
+      if (k == 0) start = nextp;
+      printf("port %d: k = %d, nextp = %d, porder_nextp = %d \n", i, k, nextp,
+      _porders[nextp]);
+    }
+  }
+
+
+  /* distribute ports
+   * 2nd solution:
+   * scattering ports by round-robin
+   *
+  int maxweight = find_max(_weights, _nweights);
+  printf("maxweight = %d\n", maxweight);
+  for (int i = 0; i < (maxweight * scale); i++) {
+    for (int j = 0; j < _nweights; j++) {
+      int numports = _weights[j] * scale;
+      if (i < numports) {
+        int nextp = int(_sumwei*i/_weights[j]);
+        if (_porders[nextp] == -1) 
+          // can use this position
+          _porders[nextp] = j;
+        else {
+          // find another position
+          for (int k = int(nextp-j); k < posize; k++) {
+            if (_porders[k] == -1) {
+              _porders[k] = j;
+              break;
+            }
+          }
+        }
       }
     }
   }
+  */
+  // debug
+  for (int i=0; i < posize; i++) 
+    printf("porders %d : port %d \n", i, _porders[i]);
   return 0;
 }
 
 Packet *
 WRRSched::pull(int)
 {
-  int n = _sumwei;
+  int n = _sumwei * scale;
   int i = _next;
   for (int j = 0; j < n; j++) {
     int port = _porders[i];
