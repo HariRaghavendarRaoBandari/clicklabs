@@ -1,6 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 /*
- * randomqueue.{cc,hh} -- queue element safe for use on SMP
+ * randomqueue.{cc,hh} -- random queue element safe for use on SMP
+ * iizke
  * Eddie Kohler
  *
  * Copyright (c) 2008 Meraki, Inc.

@@ -1,6 +1,7 @@
 /*
- * randinfinitesource.{cc,hh} -- element generates configurable infinite stream
- * of packets
+ * randinfinitesource.{cc,hh} -- element generates configurable random infinite 
+ * stream of packets
+ * iizke
  * Eddie Kohler
  *
  * Copyright (c) 1999-2000 Massachusetts Institute of Technology
