@@ -104,6 +104,7 @@
   data, the last action you need is running this command:
 
     draw-graph.sh -f data1.dump -f data2.dump -f data_n.dump 
+      [-o PNG_FILE]
       [--packet-count]
       [--xrange 233:23221]
       [--yrange 282:2922]
@@ -112,5 +113,8 @@
       [--xcol 2]
       [--ycol 1]
 
-  This tool is young, so the plot-template is hard code. It will be change to
-  be able to use another templates.
+  After program "draw-graph.sh" finishes its work, it will create a picture
+  file (PNG file). If user doesn't use output option (-o), this program will
+  export to screen (using default output file /dev/output). This tool is young,
+  so the plot-template is hard code. It will be change to be able to use another 
+  templates.
