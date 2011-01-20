@@ -155,12 +155,15 @@ else
   ymax=`echo $YRANGE |awk -F : '{print $2}'`
   
   touch /tmp/tmpfile
+  register_tmp_file /tmp/tmpfile
+
   if [ "$PACKETCOUNT" == "true" ]; then
     cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
   else
     cat $PLOTSCRIPT | sed -e s/YRANGE/0:2/g > /tmp/tmpfile
   fi
   cat /tmp/tmpfile > $PLOTSCRIPT
+
   #try to modify XRANGE
   xmin=9999999999.9
   xmax=0.1
@@ -189,6 +192,8 @@ for f in $DUMPFILES; do
     datafile=`basename $f`.convert
   fi
 
+  register_tmp_file $datafile
+
   if [ $count -eq 0 ]; then
     PLOTSTR="\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
   else
@@ -201,3 +206,6 @@ done
 #Do plotting
 chmod +x $PLOTSCRIPT
 $PLOTSCRIPT
+
+#clean trash
+
