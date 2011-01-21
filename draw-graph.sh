@@ -61,6 +61,15 @@ option_config_add "--title" \
                   "TITLE" \
                   "1" \
                   "Title of the graph. For example: Arrival Curve of input packet"
+option_config_add "--plot-type" \
+                  "PLOTTYPE" \
+                  "1" \
+                  "Type of plotting data. It can be: RATE, COUNT (Default) or DENSITY"
+option_config_add "--data" \
+                  "DATA" \
+                  "1" \
+                  "Data for plotting"
+
 option_parse "$@"
 
 if [ "$HELP" == "true" ]; then
@@ -88,16 +97,55 @@ if [ "$OUTPUT" == "" ]; then
   OUTPUT=/dev/stdout
 fi
 
+if [ "$PLOTTYPE" == "" ]; then
+  PLOTTYPE="COUNT"
+fi
+
 #convert dump file to human readable file (using to plot)
+get_converted_filename () {
+  local fn=$1
+  local plottype=$2
+  local cf=$fn
+  if [ "$plottype" == "COUNT" ]; then
+    cf=`basename $f`.convert.pc
+  elif [ "$plottype" == "RATE" ]; then
+    cf=`basename $f`.convert.rate
+  else
+    cf=`basename $f`.convert
+  fi
+  echo $cf
+}
+ 
 DUMPFILES=`echo $DUMPFILES | sed -e 's/:/ /g'`
 for f in $DUMPFILES; do
-  #if [ "$PACKETCOUNT" == "true" ]; then
+  if [ "$PLOTTYPE" == "COUNT" ]; then
     convert-click-dump.sh -f $f --packet-count -o `basename $f`.convert.pc
-  #else
+  else
     convert-click-dump.sh -f $f -o `basename $f`.convert
-  #fi
-  #register_tmp_file `basename $f`.convert
+    if [ "$PLOTTYPE" == "RATE" ]; then
+      pt=0
+      c=1 # count number of packets in a very small interval (0 division)
+      while read n t; do
+        #if [ "$pt" == "0" ]; then 
+        #  pt=$t
+        #  continue
+        #fi
+        if [ "$t" == "$pt" ]; then
+          c=$((c+1))
+          continue
+        fi
+        freq=`echo $c $pt $t | awk '{print $1/($3-$2)}'`
+        echo $freq $t >> `basename $f`.convert.rate
+        pt=$t
+        c=1
+      done < `basename $f`.convert
+    fi
+  fi
+  register_tmp_file `basename $f`.convert
+  register_tmp_file `basename $f`.convert.pc
+  #register_tmp_file `basename $f`.convert.rate
 done
+
 
 #prepare gnuplot
 #using draw-graph.pg.template
@@ -168,7 +216,7 @@ else
   xmin=9999999999.9
   xmax=0.1
   for f in $DUMPFILES; do
-    dumpfile_conv=`basename $f`.convert.pc
+    dumpfile_conv=`get_converted_filename $f $PLOTTYPE`
     t=`find_value_x $dumpfile_conv $ymin`
     if [ `echo "$t < $xmin" |bc` -eq 1 ]; then
       xmin=$t
@@ -186,13 +234,7 @@ fi
 
 count=0
 for f in $DUMPFILES; do
-  if [ "$PACKETCOUNT" == "true" ]; then
-    datafile=`basename $f`.convert.pc
-  else
-    datafile=`basename $f`.convert
-  fi
-
-  register_tmp_file $datafile
+  datafile=`get_converted_filename $f $PLOTTYPE`
 
   if [ $count -eq 0 ]; then
     PLOTSTR="\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
@@ -206,6 +248,4 @@ done
 #Do plotting
 chmod +x $PLOTSCRIPT
 $PLOTSCRIPT
-
-#clean trash
 

@@ -14,7 +14,7 @@ elementclass UncontrolledFlow1 {
                 goto RESET $(ne $stable 0),
                 set stable $st,
                 //label SET_RATE,
-                set r $(add $(mod $(random) $rate) $(mod $(random) $rate) 100),
+                set r $(add $(mod $(random) $rate) $(mod $(random) $rate) 1),
                 //set r $rate,
                 set t1 $(div 1 $r),
                 label RESET,
@@ -28,7 +28,7 @@ elementclass UncontrolledFlow1 {
                 write s0.limit $b);
 }
 
-flow0::UncontrolledFlow1(RATE 1000, BURST 20, STABLE 100);
+flow0::UncontrolledFlow1(RATE 10, BURST 1, STABLE 5);
 flow0 
   -> ToDump(dump/dumpucout)
   -> c1::Counter -> Discard;
