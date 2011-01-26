@@ -2,7 +2,7 @@
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
 # Bash shell script library functions
-source $FILEDIR/tools/libfuncs.sh 2>/dev/null
+source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 
 trap clean 2 EXIT SIGTERM
 

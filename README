@@ -8,35 +8,35 @@
     This directory contains templates used for plotting data by gnuplot. These
     files are used by draw-graph.sh
 
-  update-elements.sh
+  bin/update-elements.sh
     Run this file to update the new elements implemented in directory elements
     (above). For more information, type: ./update-elements.sh -h
 
-  visual-clicky.sh
+  bin/visual-clicky.sh
     Shell script to visualize click experiment using clicky. For more
     information, type: ./visual-clicky.sh -h
 
-  init.sh
+  bin/init.sh
     Initialize Click environment for lab. Just run init.sh in the first time
     you get this source or click source directory changed. 
 
-  eclick-compile.sh
+  bin/eclick-compile.sh
     Extend the Click file. A click file can include another one to reuse some
     compound elements (similar include in C, or import in Java). File
     eclick-compile.sh is used to translate (or flatten) these extended-click
     file to a normal click file.
 
-  convert-click-dump.sh
+  bin/convert-click-dump.sh
     This script used to transform dump files from click (binary files) into
     text files. Note: this is one-way transformation, the binary files cannot
     be recovered from the text files.
 
-  draw-graph.sh
+  bin/draw-graph.sh
     This script is used to draw graphs from data extracted in CLICK dump
     files. Just provide the dump files, this script will generate a graph for
     you. Note: No need to use convert-click-dump.sh before using draw-graph.sh.
 
-  clicky.ccss
+  bin/clicky.ccss
     File supporting Clicky Cascading Style Sheets. It controls the appearance of a
     Clicky diagram with style sheets written in a CSS-like language.
 

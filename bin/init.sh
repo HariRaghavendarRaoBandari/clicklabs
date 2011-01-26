@@ -2,7 +2,7 @@
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
 # Bash shell script library functions
-source $FILEDIR/tools/libfuncs.sh 2>/dev/null
+source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 FILEDIR=$(get_abs_path $FILEDIR)
 
 clean () {
@@ -64,7 +64,7 @@ if [ "$CLICK_SRC" != "" ]; then
 fi
 print_info "Checking CLICK Source from file ~/.clickrc ..."
 source ~/.clickrc 2>/dev/null
-print_info "    CLICK_SRC = $CLICK_SRC".
+#print_info "    CLICK_SRC = $CLICK_SRC".
 if [ "$CLICK_SRC" == "" ]; then
   print_info "Auto-detecting the Click source path (normally, it is long time, but you can use option -s or --click-src to ignore this action) ..."
   CLICK_SRC=$(cat $(find / -wholename "*click/srcdir" 2>/dev/null | head -1) 2>/dev/null)

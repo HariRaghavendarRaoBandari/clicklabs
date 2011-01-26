@@ -4,8 +4,9 @@
 # iizke
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
+CLICKLAB_HOME=$FILEDIR/..
 # Bash shell script library functions
-source $FILEDIR/tools/libfuncs.sh 2>/dev/null
+source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 # File .clickrc represents the Click source path 
 source ~/.clickrc 2>/dev/null
 
@@ -29,7 +30,7 @@ fi
 
 print_info "CLICK_SRC is ${CLICK_SRC}"
 mkdir -p $CLICK_SRC/elements/local
-cp elements/*.cc elements/*.hh $CLICK_SRC/elements/local
+cp $CLICKLAB_HOME/elements/*.cc $CLICKLAB_HOME/elements/*.hh $CLICK_SRC/elements/local
 cd $CLICK_SRC
 print_warn "Before rebuilding the Click source for updating the new elements, need to configure with --enable-local option in the first time Click is installed: ./configure --enable-local"
 make elemlist

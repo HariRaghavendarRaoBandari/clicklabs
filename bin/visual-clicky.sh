@@ -1,8 +1,9 @@
 #!/bin/bash
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
+CLICKLABS_HOME=$FILEDIR/..
 # Bash shell script library functions
-source $FILEDIR/tools/libfuncs.sh 2>/dev/null
+source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 
 clean () {
   killall -9 click 2>/dev/null
@@ -45,7 +46,7 @@ if [ "$HELP" == "true" ]; then
 fi
 
 if [ "$CCSS_FILE" = "" ]; then
-  CCSS_FILE=$FILEDIR/clicky.ccss
+  CCSS_FILE=$CLICKLABS_HOME/clicky.ccss
 fi
 
 if [ "$PORT" = "" ]; then
