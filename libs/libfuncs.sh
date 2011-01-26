@@ -119,14 +119,18 @@ get_abs_path () {
 	local _p=$1
 	local _curdir=`pwd`
 	if [ -e "$_p" ]; then
-		_basen=`basename $_p`
-		_dirn=`dirname $_p`
+		local _basen=`basename $_p`
+		local _dirn=`dirname $_p`
 		cd $_dirn 
     if [ $? -ne 0 ]; then
       return
     fi
-		echo `pwd`/$_basen
-		cd $_curdir
+    if [ "$_basen" == "." ]; then
+      echo `pwd`
+    else
+		  echo `pwd`/$_basen
+    fi
+    cd $_curdir
 	fi
 }
 
