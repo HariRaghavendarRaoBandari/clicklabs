@@ -69,12 +69,14 @@ is_date_string () {
 is_number () {
 	local _str=$1
 	local _value=`echo $_str | grep "^[0-9]*$"`
+  #$echo value = $_value
 	if [ "X$_value" == "X" ]; then
 		echo "false"
 	else
 		echo "true"
 	fi
 }
+#is_number "9"
 
 sync_file () {
 	local _f1=$1

@@ -6,7 +6,7 @@ set xlabel "XLABEL"
 set xrange [XRANGE]
 
 set ylabel "YLABEL"
-set yrange [YRANGE]
+set yrange [0:50]
 
 set title "TITLE"
 set key reverse Left outside

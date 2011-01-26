@@ -101,27 +101,20 @@ if [ "$PLOTTYPE" == "" ]; then
   PLOTTYPE="COUNT"
 fi
 
-#convert dump file to human readable file (using to plot)
-get_converted_filename () {
-  local fn=$1
-  local plottype=$2
-  local cf=$fn
-  if [ "$plottype" == "COUNT" ]; then
-    cf=`basename $f`.convert.pc
-  elif [ "$plottype" == "RATE" ]; then
-    cf=`basename $f`.convert.rate
-  else
-    cf=`basename $f`.convert
-  fi
-  echo $cf
-}
+#Prepare data for plotting
+#Convert dump file to human readable file (using to plot)
  
 DUMPFILES=`echo $DUMPFILES | sed -e 's/:/ /g'`
+DATA=`echo $DATA | sed -e 's/:/ /g'`
 for f in $DUMPFILES; do
+  CONVERTFILE=""
+  _CONVERTFILE=""
   if [ "$PLOTTYPE" == "COUNT" ]; then
-    convert-click-dump.sh -f $f --packet-count -o `basename $f`.convert.pc
+    CONVERTFILE=`basename $f`.convert.pc
+    convert-click-dump.sh -f $f --packet-count -o $CONVERTFILE
   else
-    convert-click-dump.sh -f $f -o `basename $f`.convert
+    _CONVERTFILE=`basename $f`.convert
+    convert-click-dump.sh -f $f -o $_CONVERTFILE
     if [ "$PLOTTYPE" == "RATE" ]; then
       pt=0
       c=1 # count number of packets in a very small interval (0 division)
@@ -135,17 +128,23 @@ for f in $DUMPFILES; do
           continue
         fi
         freq=`echo $c $pt $t | awk '{print $1/($3-$2)}'`
-        echo $freq $t >> `basename $f`.convert.rate
+        CONVERTFILE=`basename $f`.convert.rate
+        echo $freq $t >> $CONVERTFILE
         pt=$t
         c=1
-      done < `basename $f`.convert
+      done < $_CONVERTFILE
+    else
+      CONVERTFILE=$_CONVERTFILE
     fi
   fi
-  register_tmp_file `basename $f`.convert
-  register_tmp_file `basename $f`.convert.pc
+  #Aggregate Converted_dump_file to DATA
+  #but remove the built-in data (future)
+  DATA="$DATA $CONVERTFILE"
+
+  #register_tmp_file $CONVERTFILE
+  #register_tmp_file $_CONVERTFILE
   #register_tmp_file `basename $f`.convert.rate
 done
-
 
 #prepare gnuplot
 #using draw-graph.pg.template
@@ -182,6 +181,19 @@ find_value_y () {
   done < $datafile
 } 
 
+find_maxmin_x () {
+  local maxx=0
+  for f in $DATA; do
+    local tmpx=""
+    tmpx=`cat $f | head -1 | awk '{print $2}'`
+    local check=`echo "$maxx < $tmpx" |bc`
+    if [ $check -eq 1 ]; then
+      maxx=$tmpx
+    fi
+  done
+  echo $maxx
+}
+
 if [ "$XRANGE" == "" ]; then
   touch /tmp/tmpfile
   #Remove "set xrange" statement
@@ -189,6 +201,14 @@ if [ "$XRANGE" == "" ]; then
   cat /tmp/tmpfile > $PLOTSCRIPT
 else
   touch /tmp/tmpfile
+  maxminx=`find_maxmin_x`
+  x1=`echo $XRANGE | awk -F : '{printf "%.16f", $1}'`
+  x2=`echo $XRANGE | awk -F : '{printf "%.16f", $2}'`
+  if [ `echo "$x1 == 0" | bc` -eq 1 ]; then
+    x1=$maxminx
+    x2=`echo $x1 $x2 | awk '{printf "%.16f", $1+$2}'`
+    XRANGE="$x1:$x2"
+  fi
   cat $PLOTSCRIPT | sed -e s/XRANGE/${XRANGE}/g > /tmp/tmpfile
   cat /tmp/tmpfile > $PLOTSCRIPT
 fi
@@ -205,41 +225,38 @@ else
   touch /tmp/tmpfile
   register_tmp_file /tmp/tmpfile
 
-  if [ "$PACKETCOUNT" == "true" ]; then
-    cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
-  else
+  if [ "$PLOTTYPE" == "DENSITY" ]; then
     cat $PLOTSCRIPT | sed -e s/YRANGE/0:2/g > /tmp/tmpfile
+  else
+    cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
   fi
   cat /tmp/tmpfile > $PLOTSCRIPT
 
   #try to modify XRANGE
-  xmin=9999999999.9
-  xmax=0.1
-  for f in $DUMPFILES; do
-    dumpfile_conv=`get_converted_filename $f $PLOTTYPE`
-    t=`find_value_x $dumpfile_conv $ymin`
-    if [ `echo "$t < $xmin" |bc` -eq 1 ]; then
-      xmin=$t
-    fi
-    t=`find_value_x $dumpfile_conv $ymax`
-    if [ `echo "$t > $xmax" |bc` -eq 1 ]; then
-      xmax=$t
-    fi
-  done
-  if [ "$xmin" != "" -a "$xmax" != "" ]; then
-    cat $PLOTSCRIPT | sed -e 's:#set xrange:set xrange:g' > /tmp/tmpfile
-    cat /tmp/tmpfile | sed -e s/XRANGE/${xmin}:${xmax}/g > $PLOTSCRIPT
-  fi
+  #xmin=9999999999.9
+  #xmax=0.1
+  #for f in $DATA; do
+  #  t=`find_value_x $f $ymin`
+  #  if [ `echo "$t < $xmin" |bc` -eq 1 ]; then
+  #    xmin=$t
+  #  fi
+  #  t=`find_value_x $f $ymax`
+  #  if [ `echo "$t > $xmax" |bc` -eq 1 ]; then
+  #    xmax=$t
+  #  fi
+  #done
+  #if [ "$xmin" != "" -a "$xmax" != "" ]; then
+  #  cat $PLOTSCRIPT | sed -e 's:#set xrange:set xrange:g' > /tmp/tmpfile
+  #  cat /tmp/tmpfile | sed -e s/XRANGE/${xmin}:${xmax}/g > $PLOTSCRIPT
+  #fi
 fi
 
 count=0
-for f in $DUMPFILES; do
-  datafile=`get_converted_filename $f $PLOTTYPE`
-
+for f in $DATA; do
   if [ $count -eq 0 ]; then
-    PLOTSTR="\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
   else
-    PLOTSTR=",\"$datafile\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
   fi
   count=1
   echo $PLOTSTR >> $PLOTSCRIPT
