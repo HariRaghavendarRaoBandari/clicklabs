@@ -64,7 +64,7 @@ elementclass RatedTokenBucketPolicer {
                 set t $(tokenq.length),
                 write sw.switch $(if $(gt $t 0) 0 1),
                 write ps.switch $(if $(gt $t 0) 0 1)
-                )
+              )
     -> sw;
 
   // Go on output 0
@@ -90,3 +90,23 @@ elementclass RatedTokenBucketShaper {
                                 write red.max_thresh $(mul $(q.capacity) 1.5));
 }
 
+elementclass RatedTokenBucketPolicer1 {
+  RATE $rate, BURST $burst | 
+  q::Queue($burst);
+  // This TokenGen script increases Queue q size to maximum $burst periodically
+  // T = 1/rate
+  TokenGen::Script(TYPE ACTIVE, 
+                  set t $(div 1 $rate),
+                  label GEN,
+                  set newcap $(add $(q.capacity) 1),
+                  goto WAIT $(ge $newcap $burst), 
+                  write q.capacity $newcap,
+                  label WAIT,
+                  wait $t,
+                  goto GEN);
+  input
+  -> q
+  -> TokenReduced::Script(TYPE PACKET, write q.capacity $(sub $(q.capacity) 1))
+  -> RatedUnqueue(RATE $rate)
+  -> output;
+}

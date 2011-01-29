@@ -1,8 +1,9 @@
 #!/bin/bash
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
+LABHOME=$FILEDIR/..
 # Bash shell script library functions
-source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
+source $LABHOME/libs/libfuncs.sh 2>/dev/null
 
 trap clean 2 EXIT SIGTERM
 
@@ -69,6 +70,14 @@ option_config_add "--data" \
                   "DATA" \
                   "1" \
                   "Data for plotting"
+option_config_add "--multiplot" \
+                  "MULTIPLOT" \
+                  "0" \
+                  "Plots place separately and vertically"
+option_config_add "--template" \
+                  "TEMPLATE" \
+                  "1" \
+                  "Plot template"
 
 option_parse "$@"
 
@@ -101,6 +110,18 @@ if [ "$PLOTTYPE" == "" ]; then
   PLOTTYPE="COUNT"
 fi
 
+if [ "$MULTIPLOT" == "" ]; then
+  MULTIPLOT="false"
+fi
+
+if [ "$TEMPLATE" == "" ]; then
+  if [ "$MULTIPLOT" == "false" ]; then
+    TEMPLATE=$LABHOME/plot-template/draw-graph.pg.template
+  else
+    TEMPLATE=$LABHOME/plot-template/draw-graph-multiplot.pg.template
+  fi
+fi
+
 #Prepare data for plotting
 #Convert dump file to human readable file (using to plot)
  
@@ -118,6 +139,7 @@ for f in $DUMPFILES; do
     if [ "$PLOTTYPE" == "RATE" ]; then
       pt=0
       c=1 # count number of packets in a very small interval (0 division)
+      CONVERTFILE=`basename $f`.convert.rate
       while read n t; do
         #if [ "$pt" == "0" ]; then 
         #  pt=$t
@@ -127,8 +149,7 @@ for f in $DUMPFILES; do
           c=$((c+1))
           continue
         fi
-        freq=`echo $c $pt $t | awk '{print $1/($3-$2)}'`
-        CONVERTFILE=`basename $f`.convert.rate
+        freq=`echo $c $pt $t | awk '{printf "%.2f", $1/($3-$2)}'`
         echo $freq $t >> $CONVERTFILE
         pt=$t
         c=1
@@ -140,21 +161,18 @@ for f in $DUMPFILES; do
   #Aggregate Converted_dump_file to DATA
   #but remove the built-in data (future)
   DATA="$DATA $CONVERTFILE"
-
-  #register_tmp_file $CONVERTFILE
-  #register_tmp_file $_CONVERTFILE
-  #register_tmp_file `basename $f`.convert.rate
 done
 
 #prepare gnuplot
-#using draw-graph.pg.template
+#using template to plot
 PLOTSCRIPT=./draw-graph-`date +%s`.pg
 register_tmp_file $PLOTSCRIPT
-cat $FILEDIR/plot-template/draw-graph.pg.template | \
+cat $TEMPLATE | \
                       sed -e s:XLABEL:${XLABEL}:g \
                           -e s:YLABEL:${YLABEL}:g \
                           -e s:XCOL:${XCOL}:g \
                           -e s:YCOL:${YCOL}:g \
+                          -e s:TITLE:${TITLE}:g \
                           -e s:OUTPUT:${OUTPUT}:g > $PLOTSCRIPT
 
 register_tmp_file /tmp/tmpfile
@@ -194,6 +212,7 @@ find_maxmin_x () {
   echo $maxx
 }
 
+#Update XRANGE to PLOTSCRIPT
 if [ "$XRANGE" == "" ]; then
   touch /tmp/tmpfile
   #Remove "set xrange" statement
@@ -202,17 +221,18 @@ if [ "$XRANGE" == "" ]; then
 else
   touch /tmp/tmpfile
   maxminx=`find_maxmin_x`
-  x1=`echo $XRANGE | awk -F : '{printf "%.16f", $1}'`
-  x2=`echo $XRANGE | awk -F : '{printf "%.16f", $2}'`
+  x1=`echo $XRANGE | awk -F : '{printf "%.6f", $1}'`
+  x2=`echo $XRANGE | awk -F : '{printf "%.6f", $2}'`
   if [ `echo "$x1 == 0" | bc` -eq 1 ]; then
     x1=$maxminx
-    x2=`echo $x1 $x2 | awk '{printf "%.16f", $1+$2}'`
+    x2=`echo $x1 $x2 | awk '{printf "%.6f", $1+$2}'`
     XRANGE="$x1:$x2"
   fi
   cat $PLOTSCRIPT | sed -e s/XRANGE/${XRANGE}/g > /tmp/tmpfile
   cat /tmp/tmpfile > $PLOTSCRIPT
 fi
 
+#Update YRANGE to PLOTSCRIPT
 if [ "$YRANGE" == "" ]; then
   touch /tmp/tmpfile
   #Remove "set xrange" statement
@@ -251,16 +271,27 @@ else
   #fi
 fi
 
+#Append line to show gnuplot what data is plotted
 count=0
 for f in $DATA; do
-  if [ $count -eq 0 ]; then
-    PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+  if [ "$MULTIPLOT" == "false" ]; then
+    if [ $count -eq 0 ]; then
+      PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    else
+      PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    fi
   else
-    PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+    PLOTSTR="set origin DX,DY+SY*$count; plot \"$f\" using $XCOL:$YCOL title \"`basename $f`\";"
   fi
-  count=1
+  count=$((count+1))
   echo $PLOTSTR >> $PLOTSCRIPT
 done
+
+#Calculate SY, NY in case of multiplot
+if [ "$MULTIPLOT" == "true" ]; then
+  cat $PLOTSCRIPT | sed -e s/NY=1/NY=${count}/g > /tmp/tmpfile
+  cat /tmp/tmpfile | sed -e s/SY=1/SY=`echo $count | awk '{printf "%.2f", 0.9/$1}'`/g > $PLOTSCRIPT 
+fi
 
 #Do plotting
 chmod +x $PLOTSCRIPT
