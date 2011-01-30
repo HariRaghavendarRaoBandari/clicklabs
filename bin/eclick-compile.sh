@@ -80,27 +80,32 @@ build_included_list () {
       may check CLICK_INCLUDE_PATH."
       exit
     fi
-    #check and remove the existing ff in included_files list
-    INCLUDED_FILES=`echo $INCLUDED_FILES:$ff | awk -F : '{
-                                          ns = ""; 
-                                          split($0, a, ":");
-                                          for (i = 0; i < NF; i++) { 
-                                            if (a[i] != a[NF]){
-                                              ns == "" ? ns = a[i] : ns = ns":"a[i]
-                                            }
-                                          };
-                                          print ns }'`
-    #insert ff into INCLUDED_FILES 
-    INCLUDED_FILES=$INCLUDED_FILES:$ff
-    #recursive the build
-    build_included_list "$ff"
-  done
+    #check (and remove) the existing ff in included_files list
+    #INCLUDED_FILES=`echo $INCLUDED_FILES:$ff | awk -F : '{
+    #                                      ns = ""; 
+    #                                      split($0, a, ":");
+    #                                      for (i = 0; i < NF; i++) { 
+    #                                        if (a[i] != a[NF]){
+    #                                          ns == "" ? ns = a[i] : ns = ns":"a[i]
+    #                                        }
+    #                                      };
+    #                                     print ns }'`
 
+    #check ff in INCLUDED_FILES
+    local check=`echo $INCLUDED_FILES |sed -e 's/:/\n/g' |grep "$ff" 2>/dev/null`
+    if [ "$check" == "" ]; then
+      #recursive the build
+      build_included_list "$ff"
+      #insert ff into INCLUDED_FILES
+      INCLUDED_FILES=$INCLUDED_FILES:$ff
+      #recursive the build
+      #build_included_list "$ff"
+    fi
+  done
 }
 
 #Build included list: is stored in INCLUDED_FILES
 build_included_list "$ECLICK_FILE"
-
 #Now, create complete - flat click file
 for f in `echo $INCLUDED_FILES | sed -e 's/:/\n/g'`; do 
   cat "$f" >> $OUTPUT
