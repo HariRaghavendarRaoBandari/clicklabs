@@ -32,11 +32,25 @@ elementclass RatedNegotiablePolicer1 {
   -> output;
 }
 
+elementclass RatedNegotiablePolicer2 {
+  CEBS $cebs, INTERVAL $interval, BURST $burst | 
+  // interval = 1/rate
+
+  shaper::RatedTokenBucketShaper1(SIZE $cebs, INTERVAL $interval, BURST $burst,
+  REPEATED true);
+  input -> shaper -> output;
+}
+  
 flow0::UncontrolledFlow1 (RATE 100, BURST 2, STABLE 25);
 ps::PaintSwitch;
 flow0 
 -> c1::Counter 
 -> r::RatedNegotiablePolicer1(CBS 10, CBST 0.01, CEBS 12)
--> ps;
-ps[0] -> Discard;
-ps[1] -> Discard;
+-> ps
+-> Discard;
+
+flow1::UncontrolledFlow1 (RATE 100, BURST 2, STABLE 25);
+flow1
+-> RatedNegotiablePolicer2(CEBS 12, INTERVAL 0.1, BURST 2)
+-> Discard;
+

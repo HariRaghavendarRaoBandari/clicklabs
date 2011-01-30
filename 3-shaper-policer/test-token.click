@@ -3,14 +3,14 @@
 //#include "token-bucket.click"
 //#include "uncontrol-flow.click"
 
-flow0::UncontrolledFlow1(RATE 1000, BURST 10, STABLE 10);
+flow0::UncontrolledFlow1(RATE 11, BURST 1, STABLE 10);
 //flow1::UncontrolledFlow(RATE 1000, BURST 10);
 
 flow0 
-  -> ToDump(dumpin, SNAPLEN 1)
+//  -> ToDump(dumpin, SNAPLEN 1)
 //  -> c1::Counter
-  -> RatedTokenBucketPolicer1(RATE 1000, BURST 10) 
-  -> ToDump(dumpout, SNAPLEN 1)
+  -> RatedTokenBucketPolicer1(INTERVAL 1, BURST 10, REPEATED true) 
+//  -> ToDump(dumpout, SNAPLEN 1)
 //  -> c2::Counter
   -> Discard;
 

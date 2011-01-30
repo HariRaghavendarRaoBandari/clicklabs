@@ -50,6 +50,7 @@ elementclass RatedTokenBucketPolicer {
   RATE $rate, BURST $size |
 
   // Token bucket
+  // similar a sample source
   ps::PullSwitch(1);
   Idle -> [1]ps;
   s::RatedSource(LENGTH 1, LIMIT -1, ACTIVE true, STOP true, RATE $rate)
@@ -77,7 +78,7 @@ elementclass RatedTokenBucketShaper {
   SIZE $size, RATE $rate, BURST $burst |
 
   policer::RatedTokenBucketPolicer(RATE $rate, BURST $burst);
-  input
+input
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
     -> shaper::RatedUnqueue(RATE $rate)
@@ -91,22 +92,37 @@ elementclass RatedTokenBucketShaper {
 }
 
 elementclass RatedTokenBucketPolicer1 {
-  RATE $rate, BURST $burst | 
+  INTERVAL $interval, BURST $burst, REPEATED $repeated | 
   q::Queue($burst);
   // This TokenGen script increases Queue q size to maximum $burst periodically
   // T = 1/rate
   TokenGen::Script(TYPE ACTIVE, 
-                  set t $(div 1 $rate),
                   label GEN,
-                  set newcap $(add $(q.capacity) 1),
-                  goto WAIT $(ge $newcap $burst), 
+                  set newcap $(if $repeated $burst $(add $(q.capacity) 1)),
+                  goto WAIT $(gt $newcap $burst), 
                   write q.capacity $newcap,
                   label WAIT,
-                  wait $t,
+                  wait $interval,
                   goto GEN);
   input
   -> q
   -> TokenReduced::Script(TYPE PACKET, write q.capacity $(sub $(q.capacity) 1))
-  -> RatedUnqueue(RATE $rate)
+  //-> RatedUnqueue(RATE $rate)
+  -> TimedUnqueue($interval, $burst)
   -> output;
 }
+
+elementclass RatedTokenBucketShaper1 {
+  SIZE $size, INTERVAL $interval, BURST $burst, REPEATED $repeated |
+
+  policer::RatedTokenBucketPolicer1(INTERVAL $interval, 
+                                    BURST $burst, 
+                                    REPEATED $repeated);
+  input
+    -> q::Queue($size)
+    //-> shaper::RatedUnqueue(RATE $rate)
+    -> shaper::TimedUnqueue($interval, $burst)
+    -> policer
+    -> output;
+}
+

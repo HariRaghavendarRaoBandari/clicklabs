@@ -109,7 +109,7 @@ elementclass UncontrolledFlow1 {
                 //print $t1,
                 wait $t1,
                 goto START);
-  autoupdate_change_burst::Script (TYPE PASSIVE,
+  utoupdate_change_burst::Script (TYPE PASSIVE,
                 set b $(add $(mod $(random) $burst) 1),
                 write s0.burst $b,
                 write s0.limit $b);
