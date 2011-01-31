@@ -56,13 +56,19 @@ elementclass RatedNegotiablePolicer3 {
   );
 
   TimingControl::Script (TYPE PACKET,
-    goto CONTINUE $(ne $(HighCount.count) $cbs),
-    goto CONTINUE $(ne $(HighQueue.length) 0),
+    goto CONTINUE $(ne $(SampleCount.count) $cbs),
     write HighCount.reset_counts,
     write LowCount.reset_counts,
+    write SampleCount.reset_counts,
     label CONTINUE,
-    return 0
+    end
   );
+
+  // Holding T
+  SampleSource::RatedSource(LENGTH 1, RATE $cir)
+  -> TimingControl
+  -> SampleCount::Counter(COUNT_CALL)
+  -> Discard;
 
   input
   -> SetTimestamp // This action is done for holding sequence of packets
@@ -71,7 +77,6 @@ elementclass RatedNegotiablePolicer3 {
   ClassifyPacket[0]
   -> HighCount::Counter(COUNT_CALL)
   -> HighQueue::Queue($cbs)
-  -> TimingControl
   -> HighUnqueue::RatedUnqueue($cir)
   -> [0]output;
 
