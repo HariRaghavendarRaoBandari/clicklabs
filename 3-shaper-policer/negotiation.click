@@ -36,17 +36,23 @@ elementclass RatedNegotiablePolicer3 {
   CIR $cir, CBS $cbs, EBS $ebs |
 
   InitParameters::Script(TYPE ACTIVE,
-    set LowPrioRate $(idiv $(mul $ebs $cir) $cbs),
-    write LowUnqueue.rate $LowPrioRate
+    goto BEST_EFFORT $(eq 0 $cbs),
+    write LowUnqueue.rate $(idiv $(mul $ebs $cir) $cbs),
+    end,
+    label BEST_EFFORT,
+    write LowUnqueue.rate $cir
   );
 
   ClassifyPacket::Script (TYPE PACKET,
+    goto BEST_EFFORT $(eq 0 $cbs),
     set c $(add $(HighCount.count) $(LowCount.count)),
     goto DROP $(eq $c $(add $cbs $ebs)),
     set prio $(if $(lt $(HighCount.count) $cbs) 0 1),
     return $prio,
     label DROP,
-    exit
+    exit, 
+    label BEST_EFFORT,
+    return 1
   );
 
   TimingControl::Script (TYPE PACKET,

@@ -18,7 +18,7 @@
 
 flow2::UncontrolledFlow1 (RATE 200, BURST 2, STABLE 25);
 flow2
--> rnp3::RatedNegotiablePolicer3(CBS 12, EBS 3, CIR 100);
+-> rnp3::RatedNegotiablePolicer3(CBS 0, EBS 3, CIR 100);
 rnp3[0] -> Discard;
 rnp3[1] -> Discard;
 
