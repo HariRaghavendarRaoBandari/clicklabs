@@ -1,6 +1,25 @@
 // VC_Sched.click
 // Simulate Virtual Clock Scheduling
 
+elementclass 2flows_VCSched {
+  RATE1 $rate1, RATE2 $rate2 |
+  tss::TimeSortedSched;
+  
+  input[0]
+  -> Paint(0)
+  -> SetVirtualClock(RATE $rate1)
+  -> Queue
+  -> [0] tss;
+
+  input[1]
+  -> Paint(1)
+  -> SetVirtualClock(RATE $rate2)
+  -> Queue
+  -> [1] tss;
+  tss
+  -> output;
+}
+
 // This code is to test new Click element: SetVirtualClock
 //InfiniteSource(LENGTH 10, BURST 2, LIMIT 2, STOP true)
 //-> Print("f", 1, TIMESTAMP true)
@@ -9,20 +28,15 @@
 //-> Discard;
 
 // This code implement VC Sched based on TimeSortedSched
-tss::TimeSortedSched;
-RatedSource(LENGTH 10, LIMIT 5, STOP true, RATE 1)
--> Paint(0)
--> SetVirtualClock(RATE 1)
--> Queue(10)
--> [0] tss;
+vcsched::2flows_VCSched(RATE1 1, RATE2 2);
 
-RatedSource(LENGTH 10, LIMIT 5, STOP true, RATE 2)
--> Paint(1)
--> SetVirtualClock(RATE 2)
--> Queue(10)
--> [1] tss;
+RatedSource(RATE 1, LENGTH 10, LIMIT 5, STOP true)
+-> [0]vcsched; 
 
-tss
+RatedSource(RATE 2, LENGTH 10, LIMIT 5, STOP true)
+-> [1]vcsched;
+
+vcsched
 -> Unqueue
 -> ps::PaintSwitch;
 
