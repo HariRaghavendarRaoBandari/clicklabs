@@ -36,6 +36,10 @@
     files. Just provide the dump files, this script will generate a graph for
     you. Note: No need to use convert-click-dump.sh before using draw-graph.sh.
 
+  bin/draw-graph-framerelay.sh
+    Based on draw-graph.sh, this script helps to show the characteristics of
+    verifying a conformant flow (which is deal with CIR, CBS, EBS).
+
   bin/clicky.ccss
     File supporting Clicky Cascading Style Sheets. It controls the appearance of a
     Clicky diagram with style sheets written in a CSS-like language.
@@ -105,7 +109,7 @@
 
     draw-graph.sh -f data1.dump -f data2.dump -f data_n.dump 
       [-o PNG_FILE]
-      [--packet-count]
+      [--plot-type COUNT (default) | RATE | DENSITY]
       [--xrange 233:23221]
       [--yrange 282:2922]
       [--xlabel XYZ]
