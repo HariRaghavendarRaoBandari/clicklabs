@@ -95,9 +95,9 @@ get_window_time () {
   #local acr=$4
   local T=0
   if [ $CBS -gt 0 -a $CIR -gt 0 ]; then
-    T=`echo $CBS $CIR | awk '{print $1/$2}'`
+    T=`echo $CBS $CIR | awk '{print 2*$1/$2}'`
   elif [ $ACR -gt 0 ]; then
-    T=`echo $EBS $ACR | awk '{print $1/$2}'`
+    T=`echo $EBS $ACR | awk '{print 2*$1/$2}'`
   fi
   echo $T
 }
@@ -120,4 +120,4 @@ draw-graph.sh \
         --plot-type "COUNT" \
         --xrange $XRANGE \
         -o $OUTPUT \
-        --title "Frame Relay and conformant"
+        --title "Conformant_verification"

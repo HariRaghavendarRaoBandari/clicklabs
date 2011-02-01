@@ -87,6 +87,69 @@ elementclass RatedNegotiablePolicer3 {
   -> [1]output;
 }
 
+elementclass RatedNegotiablePolicer3_1 {
+  CIR $cir, CBS $cbs, EBS $ebs |
+
+  InitParameters::Script(TYPE ACTIVE,
+    goto BEST_EFFORT $(eq 0 $cbs),
+    write LowUnqueue.rate $(idiv $(mul $ebs $cir) $cbs),
+    end,
+    label BEST_EFFORT,
+    write LowUnqueue.rate $cir
+  );
+
+  ClassifyPacket::Script (TYPE PACKET,
+    goto BEST_EFFORT $(eq 0 $cbs),
+    set c $(add $(HighCount.count) $(LowCount.count)),
+    goto DROP $(ge $c $(add $cbs $ebs)),
+    set prio $(if $(lt $(HighCount.count) $cbs) 0 1),
+    return $prio,
+    label DROP,
+    exit,
+    label BEST_EFFORT,
+    return 1
+  );
+
+  TimingControl::Script (TYPE PACKET,
+    goto CONTINUE $(lt $(TimeCount.count) $cbs),
+    write HighCount.reset_counts,
+    write LowCount.reset_counts,
+    write TimeCount.reset_counts,
+    label CONTINUE,
+    end
+  );
+
+  PrioScheduler::PrioSched;
+
+  input
+  -> SetTimestamp // This action is done for holding sequence of packets
+  -> ClassifyPacket;
+
+  ClassifyPacket[0]
+  -> HighCount::Counter(COUNT_CALL)
+  -> HighQueue::Queue($cbs)
+  -> Paint(0)
+  -> [0]PrioScheduler
+  -> TimingControl
+  -> TimeCount::Counter(COUNT_CALL)
+  -> HighUnqueue::RatedUnqueue($cir)
+  -> ps::PaintSwitch[0]
+  -> [0]output;
+
+  // Holding T
+  SampleSource::RatedSource(LENGTH 1, RATE $cir)
+  -> Paint(1)
+  -> [1]PrioScheduler;
+
+  ps[1] -> Discard;
+
+  ClassifyPacket[1]
+  -> LowCount::Counter(COUNT_CALL)
+  -> Queue($ebs)
+  -> LowUnqueue::RatedUnqueue($cir)
+  -> [1]output;
+}
+
 elementclass RatedNegotiablePolicer2 {
   CEBS $cebs, INTERVAL $interval, BURST $burst | 
   // interval = 1/rate

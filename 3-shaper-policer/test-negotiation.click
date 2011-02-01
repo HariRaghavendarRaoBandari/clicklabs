@@ -11,15 +11,16 @@
 //-> ps
 //-> Discard;
 
-//flow1::UncontrolledFlow1 (RATE 100, BURST 2, STABLE 25);
+//flow1::UncontrolledFlow1 (RATE 200, BURST 10, STABLE 25);
 //flow1
 //-> RatedNegotiablePolicer2(CEBS 12, INTERVAL 0.1, BURST 2)
 //-> Discard;
 
-flow2::UncontrolledFlow1 (RATE 1, BURST 2, STABLE 25);
+flow2::UncontrolledFlow1 (RATE 100, BURST 2, STABLE 25);
 flow2
--> Counter
--> rnp3::RatedNegotiablePolicer3(CBS 50, EBS 10, CIR 100);
-rnp3[0] -> Discard;
-rnp3[1] -> Discard;
+-> rnp3::RatedNegotiablePolicer3_1(CBS 50, EBS 10, CIR 100);
+
+tss::TimeSortedSched;
+rnp3[0] -> Queue(100) -> [0]tss -> ToDump(dumpout, SNAPLEN 1) -> Unqueue -> Discard;
+rnp3[1] -> Queue(100) -> [1]tss;
 

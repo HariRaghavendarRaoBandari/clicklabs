@@ -126,3 +126,31 @@ elementclass RatedTokenBucketShaper1 {
     -> output;
 }
 
+elementclass RatedTokenBucketPolicer2 {
+  RATE $rate, BURST $burst, REPEATED $repeated |
+
+  TokenProducer::Script(TYPE PACKET, 
+    goto CONTINUE $(lt $(sub $(GenCount.count) $(UseCount.count)) $burst),
+    exit,
+    label CONTINUE,
+    end
+  );
+  
+  TokenConsumer::Script(TYPE PACKET,
+    goto CONTINUE $(lt $(UseCount.count) $(GenCount.count)),
+    exit,
+    label CONTINUE,
+    end
+  );
+
+  RatedSource(RATE $rate, LENGTH 1)
+  -> TokenProducer
+  -> GenCount::Counter(COUNT_CALL)
+  -> Discard;
+
+  input
+  -> TokenConsumer
+  -> UseCount::Counter(COUNT_CALL)
+  -> output;
+}
+
