@@ -30,10 +30,10 @@ elementclass 2flows_VCSched {
 // This code implement VC Sched based on TimeSortedSched
 vcsched::2flows_VCSched(RATE1 1, RATE2 2);
 
-RatedSource(RATE 1, LENGTH 10, LIMIT 5, STOP true)
+RatedSource(RATE 1, LENGTH 10, STOP false, LIMIT 5)
 -> [0]vcsched; 
 
-RatedSource(RATE 2, LENGTH 10, LIMIT 5, STOP true)
+RatedSource(RATE 2, LENGTH 10, STOP false, LIMIT 5)
 -> [1]vcsched;
 
 vcsched
