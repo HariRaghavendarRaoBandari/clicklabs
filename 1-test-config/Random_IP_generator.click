@@ -56,7 +56,7 @@ elementclass PLIFOQueue {
 //SQ  :: STimestampQueue(SIZE 1000);
 //SLQ :: SLIFOQueue(SIZE 1000);
 //PLQ :: PLIFOQueue(SIZE 1000);
-//RQ  :: RandomQueue(CAPACITY 10000);
+RQ  :: RandomQueue(CAPACITY 10000);
 
 //InfiniteSource(DATA \<
 source::RandInfiniteSource(DATA \<
@@ -78,7 +78,7 @@ source::RandInfiniteSource(DATA \<
 	//-> Unqueue
 	//-> PLQ
   //-> Unqueue
-	//-> RQ
+	-> RQ
   -> Strip(14)
 	-> Align(4, 0)    // in case we're not on x86
   -> SetCRC32
@@ -88,7 +88,7 @@ source::RandInfiniteSource(DATA \<
   // Create some bit error here
   // Estimation number of lost packets (assume: all packets have the same size): 
   //    (p_packet_error = perror * packet_len(bit) >= 1 ? 0 : p_packet_error ) * number_of_packets
-  -> e::RandomBitErrors(P 0.00002)
+  -> e::RandomBitErrors(P 0.000001)
 	//-> chkIP :: CheckIPHeader(CHECKSUM false, BADSRC 192.168.1.154)
 	//-> SetIPChecksum
 	//-> CheckIPHeader(INTERFACES 192.168.1.154/24 02.00.00.255/24)

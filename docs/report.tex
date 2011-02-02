@@ -14,6 +14,7 @@
 \usepackage{rotating}
 \usepackage{graphicx}
 \usepackage{caption}
+\usepackage{amsmath}
 
 \renewcommand{\familydefault}{cmr}
 
@@ -81,13 +82,12 @@
         \item 
           While finishing to code some Click elements, put it in directory 'elements', and then run file update-elements.sh to compile and install new elements: \\
     \texttt{chmod +x update-elements.sh\\
-    update-elements.sh}\\
-          
+    update-elements.sh}
         \item
         Explore the click configuration by using tool visual-clicky.sh. Simple way to use: \\    
     \texttt{visual-clicky.sh \$CLICK\_CONFIGURATION\_FILE}
         \item
-        To support easy-reading and team-working activities, we developed a tool to allow including some click files into a click file. If you write some click files as library files, you can reuse it by using 'include statement'. For example, we have TCP\_Source.click to implement a TCP-generator, and UDP\_Source.click to implement an UDP-generator. In TCP\_UDP.click, we want reuse the implementation of these generator, we can write in click file these lines: \\
+        To support easy-reading and team-working activities, we developed a tool to allow including some click files into a click file. If you write some click files as library files, you can reuse it by using 'include statement'. For example, we have TCP\_Source.click to implement a TCP-generator, and UDP\_Source.click to implement an UDP-generator. In TCP\_UDP.click, we reuse the implementation of these generator by adding these lines at anywhere in TCP\_UDP.click file (but should be in the top for easy reading): \\
         \texttt{
   ------------------------ file: TCP\_UDP.click ---------------------------\\
   //#include "TCP\_Source.click"\\
@@ -102,8 +102,8 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
         \item
         \begin{flushleft}
         To visualize your packet stream at input or output, we have developed draw-graph.sh to generate graph as picture (using gnuplot). So, before using this function, make sure that you have installed gnuplot. The second, you have to provide the data. Normally, we usually generate data from CLICK with elements ToDump. This data follows the format of tcpdump. When you get the data, the last action you need is running this command:\\
-\texttt{draw-graph.sh -f data1.dump -f data2.dump -f data\_n.dump \\
-      [[-o PNG\_FILES]]\\
+\texttt{draw-graph.sh -f data1.dump -f data2.dump -f data\_n.dump\\
+[-o PNG\_FILES]\\
       [[--plot-type COUNT (default) | RATE | DENSITY]]\\
       [[--xrange 233:23221]]\\
       [[--yrange 282:2922]]\\
@@ -114,8 +114,57 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   After program "draw-graph.sh" finishes its work, it will create a picture file (PNG file). If user doesn't use output option (-o), this program will export to screen (using default output file /dev/output). This tool is young, so the plot-template is hard code. It will be change to be able to use another templates.\end{flushleft}
       \end{enumerate}  
   \section{Test configuration}
+  In the first time of using click, we try to implement \texttt{Counter\_test} element, \texttt{Random\_IP\_generator} element using basic Click elements, such as \texttt{Print, InfiniteSource, RatedSource, Script}, also trying to modify a part of source code of \texttt{InfiniteSource} to generate packets that randomize byte value at a specific location in payload.
+  \subsection{\texttt{Counter\_test} Click configuration}
+  \begin{center}
+	  \includegraphics[scale=0.6]{../1-test-config/counter_test.pdf}
+	  \captionof{figure}{\texttt{Counter\_test} Click configuration}
+	  \label{fig:countertest}
+  \end{center}
+  To avoid IP CRC checking, we temporarily disable CRC checking by using flag "\texttt{CHECKSUM false}" in \texttt{CheckIPHeader} element. Another solution is to use \texttt{SetIPChecksum} to repair CRC in generated IP packets. Since We can visualize the result by using clicky to replace steps that print out screen counting results from Counter elements. 
+  \subsection{\texttt{RandInfiniteSource} element}
+  Test RandInfiniteSource
+  \subsection{\texttt{RandomQueue} element}
+  Test RandomQueue
+  \subsection{\texttt{Random\_IP\_generator} configuration}
+  \begin{center}
+	  \includegraphics[scale=0.55]{../1-test-config/Random_IP_generator.pdf}
+	  \captionof{figure}{\texttt{Random\_IP\_generator} configuration}
+	  \label{fig:randomipgenerator}
+  \end{center}
+   
   \section{TCP/UDP traffic generation}
-  \section{Shapers/Policers}
+  \subsection{TCP traffic}
+  \begin{center}
+	  \includegraphics[scale=0.55]{../2-tcp-udp-generation/TCP_Source.pdf}
+	  \captionof{figure}{\texttt{TCP\_Source} element}
+	  \label{fig:tcpsource}
+  \end{center}
+  \subsection{UDP traffic}
+    \begin{center}
+	  \includegraphics[scale=0.55]{../2-tcp-udp-generation/UDP_Source.pdf}
+	  \captionof{figure}{\texttt{UDP\_Source} element}
+	  \label{fig:udpsource}
+  \end{center}
+  \subsection{\texttt{TCP\_UDP\_generator} element}
+    \begin{center}
+	  \includegraphics[scale=0.55]{../2-tcp-udp-generation/TCP_UDP_generator.pdf}
+	  \captionof{figure}{\texttt{TCP\_UDP\_generator} element}
+	  \label{fig:tcpudp}
+  \end{center}
+  \section{Shapers and Policers}
+  \subsection{Uncontrolled flow}
+  \subsection{Leaky bucket}
+  \subsection{Token bucket}
+  \subsection{Cascading Leaky and Token bucket}
+  \subsection{Negotiation (CIR, CBS, EBS)}
   \section{Schedulers}
-
+  \subsection{FIFO scheduler}
+  \subsection{Round Robin scheduler}
+  \subsection{Weighted Round Robin Scheduler}
+  \subsection{Deficit Round Robin scheduler}
+  \subsection{\texttt{SetVirtualClock} element}
+  \subsection{Weighted Deficit Round Robin scheduler}
+  \subsection{Virtual Clock scheduler}
+  \subsection{Weighted Fair Queue scheduler}
 \end{document}

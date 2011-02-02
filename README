@@ -92,7 +92,9 @@
   ...
   ------------------------------------------------------------------------
   The syntax of include statement is simple: 
+  
           //#include "CLICK_PATH"
+  
   where CLICK_PATH can be relative or absolute path.
   After that, you have to use our tool (eclick-compile.sh) to precompile this
   file before simulating it by CLICK, for example:

@@ -115,7 +115,19 @@ elementclass UncontrolledFlow1 {
                 write s0.limit $b);
 }
 
-//flow0::UncontrolledFlow1(RATE 10, BURST 1, STABLE 5);
-//flow0 
-//  -> ToDump(dump/dumpucout)
-//  -> c1::Counter -> Discard;
+elementclass SimpleUncontrolledFlow {
+  MAXRATE $maxrate |
+
+  ratedsource::RatedSource(LENGTH 1, RATE $maxrate, LIMIT -1, STOP true)
+  -> output;
+  ScriptChangeRate::Script(TYPE ACTIVE, 
+                  wait 1, // Sleep 1 second
+                  set r $(mod $(random) 1000), // r = random mod 1000, it means 0 <= r < 1000
+                  write ratedsource.rate $r,
+                  loop, // goto the first instruction: wait 1 
+                  );
+}
+
+flow0::SimpleUncontrolledFlow(MAXRATE 100)
+-> c1::Counter 
+-> Discard;
