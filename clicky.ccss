@@ -2,8 +2,8 @@
 // all click configuration, and shows off how Clicky works with live configurations.
 
 * {
-  //orientation: horizontal;
-  orientation: vertical;
+  orientation: horizontal;
+  //orientation: vertical;
 }
 
 * handler.read {
