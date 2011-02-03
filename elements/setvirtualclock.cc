@@ -132,6 +132,7 @@ SetVirtualClock::add_handlers()
   add_data_handlers("currentbw", Handler::OP_READ | Handler::CALM, &currentbw);
   add_write_handler("currentbw", change_param, (void*)H_WCURRENTBW);  
   add_data_handlers("active", Handler::OP_READ | Handler::OP_WRITE | Handler::CHECKBOX | Handler::CALM, &_active);
+  add_data_handlers("lasttag", Handler::OP_READ | Handler::CALM, &last_tag_tv);
 }
 
 

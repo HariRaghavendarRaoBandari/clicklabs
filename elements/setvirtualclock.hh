@@ -35,6 +35,18 @@ Determine the value of maximum bandwidth or link speed (byte per second).
 =item CURRENTBW
 Determine the maximum current load over all ACTIVE flows (byte per second).
 
+=h maxbw read/write
+View or change Maximum Bandwidth (or Link speed). Bps
+
+=h currentbw read/write
+View or change Current Load on Link. Bps
+
+=h rate read/write
+View or change rate of flow. Bps
+
+=h lasttag read
+View the last assigned virtual clock (tag) time stamp.
+
 =back
 
 =a StoreTimestamp, SetTimeStamp */
