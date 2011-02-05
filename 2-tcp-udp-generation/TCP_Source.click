@@ -5,7 +5,7 @@ elementclass TCP_Generator {
   // Note: SRCPORT and DSTPORT: string number (4 characters) with hexa layout.
   SRC $src, DST $dst, 
   SRCPORT $sport, DSTPORT $dport, 
-  RATE $rate, SIZE $buffer_size |
+  RATE $rate |
 
   s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
 
@@ -21,7 +21,7 @@ elementclass TCP_Generator {
   -> IPEncap(PROTO 6, SRC $src, DST $dst)
   -> SetTCPChecksum
   -> EtherEncap(0x0800, 1:1:1:1:1:1, 2:2:2:2:2:2)
-  -> Queue($buffer_size)
+//  -> Queue($buffer_size)
   -> output;
 }
 

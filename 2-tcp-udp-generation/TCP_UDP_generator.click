@@ -18,14 +18,16 @@
 elementclass TCP_UDP_generator {
   TCP $tcp, UDP $udp |
   tcpq::TCP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050,
-                       DSTPORT 0050, RATE $tcp, SIZE 200);
+                       DSTPORT 0050, RATE $tcp);
   udpq::UDP_Generator (SRC 204.204.204.204, DST 221.221.221.221, SRCPORT 0050,
-                       DSTPORT 0050, RATE $udp, SIZE 200);
+                       DSTPORT 0050, RATE $udp);
   rrsched::RoundRobinSched;
   tcpq[0]
+    -> Queue(200)
     -> Paint(16)
     -> [0]rrsched;
   udpq[0]
+    -> Queue(200)
     -> Paint (0)
     -> [1]rrsched;
 

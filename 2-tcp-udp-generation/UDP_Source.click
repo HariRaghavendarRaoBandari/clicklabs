@@ -4,7 +4,7 @@
 elementclass UDP_Generator {
   // Note: SRCPORT and DSTPORT: string number (4 characters) with hexa layout.
   SRC $src, DST $dst, SRCPORT $sport, DSTPORT $dport,
-  RATE $rate, SIZE $buffer_size  |
+  RATE $rate  |
   
   s::Script(TYPE ACTIVE, write t.interval $(div 1 $rate));
 
@@ -20,7 +20,7 @@ elementclass UDP_Generator {
   -> IPEncap(PROTO 0x11, SRC $src, DST $dst)
   -> SetUDPChecksum
   -> EtherEncap(0x0800, 1:1:1:1:1:1, 2:2:2:2:2:2)
-  -> Queue($buffer_size)
+//  -> Queue($buffer_size)
   -> output;
 }
 

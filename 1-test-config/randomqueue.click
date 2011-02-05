@@ -41,11 +41,11 @@ elementclass 2PRandomQueue {
   mq0[1] -> [1]mq1;
 }
 
-RatedSource(LENGTH 8, RATE 20)
+RatedSource(LENGTH 8, RATE 5)
 -> StoreTimestamp(OFFSET 0)
 //-> 2PRandomQueue(5)
-//-> BRandomQueue(50)
--> RandomQueue(5)
--> RatedUnqueue(5)
+-> BRandomQueue(5)
+//-> RandomQueue(5)
+-> RatedUnqueue(4)
 -> Print("a")
 -> Discard;

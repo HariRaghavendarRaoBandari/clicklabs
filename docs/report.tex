@@ -166,18 +166,37 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   
   \subsubsection{Writing new element: \texttt{RandomQueue}}
   This element inherit from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping the random packet and the first packet. Step by step in our algorithm as following:
+  \begin{center}
+	\includegraphics[scale=0.80]{randomqueue-alg.pdf}
+	\captionof{figure}{Behavior of \texttt{RandomQueue} element}
+	\label{fig:randomqueue}
+  \end{center}
+
   \begin{itemize}
   	\item First, determining which packet is pulled out by a random number in the range from $0$ to \texttt{RandomQueue.length}.
   	\item Next, swapping the random packet and the first packet.
   	\item Last, pull out the first packet (but actually the random packet).
   \end{itemize}
-   \begin{center}
+  \begin{center}
 	\includegraphics[scale=0.70]{test-randomqueue.png}
 	\captionof{figure}{Test \texttt{RandomQueue} element}
-	\label{fig:test-randsource}
+	\label{fig:test-randomqueue}
   \end{center}
 
   \subsection{\texttt{Random\_IP\_generator} configuration}
+  We combine \texttt{RandInfiniteSource, RandomQueue} with other elements to build this configuration:
+  \begin{itemize}
+   	\item \texttt{RandInfiniteSource}: generate packets with random source IP address in the form 192.168.1.x. In this situation, we set up "RNDBYTEID 30".
+   	\item \texttt{RandomQueue}: pull out packets at random position in queue. We can replace \texttt{RandomQueue} to another types of queue, such as FIFO or LIFO, by using \texttt{MixedQueue} element (comment lines in \texttt{Random\_IP\_generator} configuration). 
+   	\item \texttt{SetCRC32, CheckCRC32}: set or check CRC32.
+   	\item \texttt{RandomBitError}: to simulate an error free link via a queue element.
+   	\item \texttt{Script}: we add some scripts to check states: 
+       	\begin{itemize}
+       		\item \texttt{autoupdate\_lostp\_estimation}: calculation based on bit error from \texttt{RandomBitError} and number of 'input' packets (\texttt{c1} in figure \ref{fig:randomipgenerator}).
+       		\item \texttt{autoupdate\_real\_bit\_error}: based on \texttt{c1, c2}. 
+       		\item \texttt{autoupdate\_lostp\_percent}: based on \texttt{c1, c2}.
+       	\end{itemize}
+   \end{itemize} 
   \begin{center}
 	  \includegraphics[scale=0.55]{Random_IP_generator.pdf}
 	  \captionof{figure}{\texttt{Random\_IP\_generator} configuration}
@@ -185,29 +204,42 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   \end{center}
   \section{TCP/UDP traffic generation}
   \subsection{TCP traffic}
+  The procedure of generating TCP packet as following:
+  \begin{itemize}
+  	\item First, we use \texttt{TimedSource} to generate TCP packet without IP header.
+  	\item After that, this packet is encapsulated IP header by \texttt{IPEncap}. Remember to setup "PROTO 0x06" to say that it is TCP packet.
+  	\item Encapsulate ethernet header with "ETHERTYPE 0x0800" in each packet.
+  \end{itemize}
   \begin{center}
 	  \includegraphics[scale=0.55]{TCP_Source.pdf}
 	  \captionof{figure}{\texttt{TCP\_Source} element}
 	  \label{fig:tcpsource}
   \end{center}
   \subsection{UDP traffic}
+    \texttt{UDP\_Generator} operates like \texttt{TCP\_Generator}. Note: when using \texttt{IPEncap}, setup "PROTO 0x11" for UDP packet.
     \begin{center}
 	  \includegraphics[scale=0.55]{UDP_Source.pdf}
 	  \captionof{figure}{\texttt{UDP\_Source} element}
 	  \label{fig:udpsource}
   \end{center}
-  \subsection{\texttt{TCP\_UDP\_generator} element}
+  \subsection{\texttt{TCP\_UDP\_generator} configuration}
+  We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when queues are not full. When queues are full, the ratio approaches 1.
     \begin{center}
-	  \includegraphics[scale=0.55]{TCP_UDP_generator.pdf}
+	  \includegraphics[scale=0.4]{TCP_UDP_generator.pdf}
 	  \captionof{figure}{\texttt{TCP\_UDP\_generator} element}
 	  \label{fig:tcpudp}
   \end{center}
   \section{Shapers and Policers}
   \subsection{Uncontrolled flow}
-  We have tried some implementations of uncontrolled flow but the main idea is
-  that the inter-time (interval) between two consecutive packets is a random
-  number.
+  We have tried some implementations of uncontrolled flow but the main idea is that the inter-time (interval) between two consecutive packets is a random
+  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. Figure \ref{fig:probuncontrolledflow} shows the configuration of \texttt{ProbUncontrolledFlow} that each time one packet go out (to output), script \texttt{ScriptChangeRate} decides whether packet rate is changed or not with specific probability $p$.
+  \begin{center}
+	\includegraphics[width=0.60\textwidth]{probuncontrolledflow}
+	\captionof{figure}{Uncontrolled flow with probability of changing rate source.}
+	\label{fig:probuncontrolledflow}
+  \end{center}
   \subsection{Leaky bucket}
+  
   \subsection{Token bucket}
   \subsection{Cascading Leaky and Token bucket}
   \subsection{Negotiation (CIR, CBS, EBS)}

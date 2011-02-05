@@ -1,7 +1,7 @@
 // uncontrol-flow.click
 // Simulate rate and burst flow
 
-elementclass UncontrolledFlow {
+elementclass UncontrolledFlow0 {
   RATE $rate, BURST $burst |
   s0::RatedSource(LENGTH 2, RATE $rate);
   s1::RatedSource(LENGTH 2, RATE $rate);
@@ -122,12 +122,25 @@ elementclass SimpleUncontrolledFlow {
   -> output;
   ScriptChangeRate::Script(TYPE ACTIVE, 
                   wait 1, // Sleep 1 second
-                  set r $(mod $(random) 1000), // r = random mod 1000, it means 0 <= r < 1000
+                  set r $(mod $(random) $maxrate), // r = random mod 1000, it means 0 <= r < 1000
                   write ratedsource.rate $r,
                   loop, // goto the first instruction: wait 1 
                   );
 }
 
-flow0::SimpleUncontrolledFlow(MAXRATE 100)
--> c1::Counter 
+elementclass ProbUncontrolledFlow {
+  MAXRATE $maxrate, PROB_CHANGE $p |
+  ScriptChangeRate::Script (TYPE PACKET, 
+      goto NOCHANGE $(lt $(div $(mod $(random) 100) 100) $p),
+      write ratedsource.rate $(add 1 $(mod $(random) $maxrate)),
+      label NOCHANGE
+  );
+  ratedsource::RatedSource(LENGTH 1, RATE $maxrate, LIMIT -1, STOP true)
+  -> ScriptChangeRate
+  -> output;
+}
+
+//flow0::SimpleUncontrolledFlow(MAXRATE 100)
+flow1::ProbUncontrolledFlow (MAXRATE 10, PROB_CHANGE 0.1)
 -> Discard;
+
