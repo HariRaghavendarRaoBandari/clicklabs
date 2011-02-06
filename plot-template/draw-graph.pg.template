@@ -1,6 +1,6 @@
 #!/usr/bin/gnuplot
 reset
-set terminal png size 1024,768 
+set terminal png size 1024,768
 set font "Times,8"
 set size ratio 0.5 
 set output "OUTPUT"
@@ -20,11 +20,20 @@ set title "TITLE"
 #set key reverse Left outside
 set grid
 
-set style data linespoints
+#set style data linespoints
 #set style data points
 #set style data dots
 #set style data fsteps
-#set style data lines
+set style data lines
+
+set style line 1 lt 1 lw 1
+set style line 2 lt 2 lw 1
+set style line 3 lt 3 lw 1
+set style line 4 lt 6 lw 1
+set style line 5 lt 1 lw 3
+set style line 6 lt 2 lw 3
+set style line 7 lt 3 lw 3
+set style line 8 lt 6 lw 3
 
 #plot \
 #  "DATA1" using XCOL:YCOL title "DATA1"

@@ -30,6 +30,15 @@ set grid
 
 set style data points
 
+set style line 1 lt 1 lw 1
+set style line 2 lt 2 lw 1
+set style line 3 lt 3 lw 1
+set style line 4 lt 6 lw 1
+set style line 5 lt 1 lw 3
+set style line 6 lt 2 lw 3
+set style line 7 lt 3 lw 3
+set style line 8 lt 6 lw 3
+
 set multiplot
 
 set size SX,SY
