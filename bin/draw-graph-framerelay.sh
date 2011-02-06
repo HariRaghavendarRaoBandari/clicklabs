@@ -1,6 +1,7 @@
 #!/bin/bash
 
 FILEDIR=$(dirname $(which $BASH_SOURCE))
+LABHOME=$FILEDIR/..
 # Bash shell script library functions
 source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 
@@ -82,8 +83,7 @@ if [ "$check" == "false" ]; then
   ACR=0
 fi
 
-check=`is_number $BASETIME`
-if [ "$check" == "false" ]; then
+if [ "$BASETIME" == "" ]; then
   BASETIME=0
 fi
 
@@ -95,9 +95,9 @@ get_window_time () {
   #local acr=$4
   local T=0
   if [ $CBS -gt 0 -a $CIR -gt 0 ]; then
-    T=`echo $CBS $CIR | awk '{print 2*$1/$2}'`
+    T=`echo $CBS $CIR | awk '{print $1/$2}'`
   elif [ $ACR -gt 0 ]; then
-    T=`echo $EBS $ACR | awk '{print 2*$1/$2}'`
+    T=`echo $EBS $ACR | awk '{print $1/$2}'`
   fi
   echo $T
 }
@@ -105,7 +105,8 @@ get_window_time () {
 WINDOW_TIME=`get_window_time`
 # Unit test: get_window_time
 #get_window_time
-XRANGE=$BASETIME:`echo $BASETIME $WINDOW_TIME | awk '{printf "%.16f", $1+$2}'`
+ENDTIME=`echo $BASETIME $WINDOW_TIME | awk '{printf "%.16f", $1+$2}'`
+XRANGE=$BASETIME:$ENDTIME
 #Build the data option
 DATAOPT=""
 if [ "$DUMPFILES" != "" ]; then
@@ -115,9 +116,30 @@ if [ "$DATA" != "" ]; then
   DATAOPT="$DATAOPT --data $DATA"
 fi
 
+#prepare CBS file
+touch ./CBS_line
+register_tmp_file ./CBS_line
+echo "$CBS $BASETIME" > ./CBS_line
+echo "$CBS $ENDTIME" >> ./CBS_line
+
+#prepare CIR file
+touch ./CIR_line
+register_tmp_file ./CIR_line
+echo "0 $ENDTIME" > ./CIR_line
+echo "$((CBS+EBS+1)) $ENDTIME" >> ./CIR_line
+
+#prepare EBS file
+touch ./EBS_line
+register_tmp_file ./EBS_line
+echo "$((CBS+EBS)) $BASETIME" > ./EBS_line
+echo "$((CBS+EBS)) $ENDTIME" >> ./EBS_line
+
 draw-graph.sh \
         $DATAOPT \
+        --data ./CIR_line \
+        --data ./CBS_line \
+        --data ./EBS_line \
         --plot-type "COUNT" \
         --xrange $XRANGE \
         -o $OUTPUT \
-        --title "Conformant_verification"
+        --title "Conformant_verification" 
