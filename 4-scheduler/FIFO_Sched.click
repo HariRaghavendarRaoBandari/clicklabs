@@ -1,7 +1,7 @@
 // FIFO_Sched.click
 // Simulate FIFO scheduler with at most 10 inputs (flows)
 
-elementclass FFSched {
+elementclass FFSched1 {
   tss::TimeSortedSched;
   input[0] -> q0::Queue(1000) -> [0]tss;
   input[1] -> q1::Queue(1000) -> [1]tss;
@@ -16,7 +16,22 @@ elementclass FFSched {
   tss -> output;
 }
 
-Sched::FFSched();
+elementclass FFSched2 {
+  queue::ThreadSafeQueue;
+  input[0] -> queue;
+  input[1] -> queue;
+  input[2] -> queue;
+  input[3] -> queue;
+  input[4] -> queue;
+  input[5] -> queue;
+  input[6] -> queue;
+  input[7] -> queue;
+  input[8] -> queue;
+  input[9] -> queue;
+  queue -> output;
+
+}
+Sched::FFSched2();
 
 // Initialize flows
 s0::RatedSource(LENGTH 1000, RATE 100, ACTIVE true);
