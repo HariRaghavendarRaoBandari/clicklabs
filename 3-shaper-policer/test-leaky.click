@@ -6,7 +6,7 @@
 
 //flow0::BandwidthUncontrolledFlow (RATE 500000, BURST 10);
 //flow1::BandwidthUncontrolledFlow (RATE 500000, BURST 10);
-flow2::ProbUncontrolledFlow (MAXRATE 100, PROB_CHANGE 0.5);
+//flow2::ProbUncontrolledFlow (MAXRATE 100, PROB_CHANGE 0.6);
 
 //flow0 -> c1::Counter -> LeakyBucketPolicer(RATE 4000 kbps) -> c2::Counter ->
 //Discard;
@@ -16,39 +16,15 @@ flow2::ProbUncontrolledFlow (MAXRATE 100, PROB_CHANGE 0.5);
 //      -> c4::Counter
 //      -> ToDump(dumpout, SNAPLEN 1)
 //      -> Discard;
-flow2 -> ToDump(dumpin, SNAPLEN 1)
-      -> c3::Counter -> RatedLeakyBucketShaper(60, SIZE 60)
-      -> Queue (60) -> RatedUnqueue(60)
-      -> c4::Counter
-      -> ToDump(dumpout, SNAPLEN 1)
-      -> Discard;
 
-utoupdate_Backlog0Calc::Script (TYPE PASSIVE,
-                      set count1 $(c1.count),
-                      set count2 $(c2.count),
-                      return $(sub $count1 $count2));
+//flow2 -> ToDump(dumpin)
+//      -> c3::Counter -> RatedLeakyBucketPolicer(RATE 10)
+      //-> Queue (60) -> RatedUnqueue(10)
+//      -> c4::Counter
+//      -> ToDump(dumpout)
+//      -> Discard;
 
-autoupdate_Backlog1Calc::Script (TYPE PASSIVE,
-                      set count3 $(c3.count),
-                      set count4 $(c4.count),
-                      return $(sub $count3 $count4));
-
-reset_button::Script (TYPE PASSIVE,
-                      write c1.reset,
-                      write c2.reset,
-                      write c3.reset,
-                      write c4.reset);
-
-utoupdate_Delay1Calc::Script (TYPE ACTIVE,
-                      set tin $(now),
-                      set count3 $(c3.count),
-                      print $tin,
-                      label DELAY,
-                      wait 0.1ms,
-                      set tout $(now),
-                      print $tout,
-                      set count4 $(c4.count),
-                      goto DELAY $(lt $count4 $count3),
-                      return $(sub $count4 $count3));
-
-
+FromDump(./dumpin, TIMING true, STOP true)
+-> RatedLeakyBucketShaper(SIZE 100, RATE 10)
+-> ToDump(dumpout_shaper)
+-> Discard;

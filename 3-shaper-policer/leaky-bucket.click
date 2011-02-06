@@ -50,16 +50,9 @@ elementclass RatedLeakyBucketShaper {
   input
 //  -> red::RED(100, $size, 0.01)
   -> q::Queue($size)
-  -> shaper::BandwidthRatedUnqueue(RATE $rate)
-  -> rs::BandwidthRatedSplitter(RATE $rate);
-  rs[0] -> output;
-  rs[1] -> Discard;
+  -> RatedUnqueue($rate)
+  -> RatedLeakyBucketPolicer(RATE $rate)
+  -> output;
 
-  autoupdate_changerate::Script(TYPE PASSIVE, 
-                                set r $(rs.rate),
-                                write shaper.rate $r);
-  //autoupdate_changesize::Script(TYPE PASSIVE,
-  //                              write red.min_thresh $(mul $(q.capacity) 0.5),
-  //                              write red.max_thresh $(mul $(q.capacity) 1.5));
 }
 

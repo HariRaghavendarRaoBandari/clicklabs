@@ -141,6 +141,6 @@ elementclass ProbUncontrolledFlow {
 }
 
 //flow0::SimpleUncontrolledFlow(MAXRATE 100)
-flow1::ProbUncontrolledFlow (MAXRATE 10, PROB_CHANGE 0.1)
--> Discard;
+//flow1::ProbUncontrolledFlow (MAXRATE 10, PROB_CHANGE 0.1)
+//-> Discard;
 

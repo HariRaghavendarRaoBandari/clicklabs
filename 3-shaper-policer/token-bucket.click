@@ -127,7 +127,7 @@ elementclass RatedTokenBucketShaper1 {
 }
 
 elementclass RatedTokenBucketPolicer2 {
-  RATE $rate, BURST $burst, REPEATED $repeated |
+  RATE $rate, BURST $burst |
 
   TokenProducer::Script(TYPE PACKET, 
     goto CONTINUE $(lt $(sub $(GenCount.count) $(UseCount.count)) $burst),
@@ -152,5 +152,16 @@ elementclass RatedTokenBucketPolicer2 {
   -> TokenConsumer
   -> UseCount::Counter(COUNT_CALL)
   -> output;
+}
+
+elementclass RatedTokenBucketShaper2 {
+  SIZE $size, RATE $rate, INTERVAL $interval, BURSTP $burstp, BURSTS $bursts|
+
+  policer::RatedTokenBucketPolicer2(RATE $rate, BURST $burstp);
+  input
+    -> q::Queue($size)
+    -> shaper::TimedUnqueue($interval, $bursts)
+    -> policer
+    -> output;
 }
 
