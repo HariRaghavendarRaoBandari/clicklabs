@@ -61,7 +61,7 @@
       	\item[bin/eclick-compile.sh] Extend the Click file. A click file can include another one to reuse some compound elements (similar include in C, or import in Java). File eclick-compile.sh is used to translate (or flatten) these extended-click file to a normal click file.
       	\item[bin/convert-click-dump.sh]This script used to transform dump files from click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
       	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in CLICK dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use convert-click-dump.sh before using draw-graph.sh.
-      	\item[bin/draw-graph-framerelay.sh] Based on draw-graph.sh, this script helps to show the characteristics of verifying a conformant flow (which is deal with CIR, CBS, EBS).
+      	\item[bin/draw-graph-framerelay.sh] Based on draw-graph.sh, this script helps to show the characteristics of verifying a conformance flow (which is deal with CIR, CBS, EBS).
       	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a Clicky diagram with style sheets written in a CSS-like language.      	
       	\item[1-test-config/]
       	\item[2-tcp-udp-generation/]
@@ -95,7 +95,7 @@
   -------------------------------------------------------------------------}\\
   The syntax of include statement is simple:\\
           \texttt{//#include "CLICK\_FILE\_PATH"}\\
-  where \texttt{CLICK\_FILE\_PATH} can be relative or absolute path. After that, you have to use our tool (\texttt{eclick-compile.sh}) to precompile this file before simulating it by Click, for example:\\
+  where \texttt{CLICK\_FILE\_PATH} can be relative or absolute path. After that, you have to use our tool (\texttt{eclick-compile.sh}) to pre-compile this file before simulating it by Click, for example:\\
     \texttt{eclick-compile.sh -o extend-TCP\_UDP.click [-f] TCP\_UDP.click}\\
 Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended-click file. It will do automatically.
         \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. Normally, we usually generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is running this command:\\
@@ -131,11 +131,11 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   	\item Random at input: Pushing packets at random positions in queue, but pulling out packets as FIFO queue. We try to simulate this behavior by using built-in Click elements.
   	\item Random at output: Pushing packets in type of FIFO, but pulling out random packets in queue. We have implemented new element called \texttt{RandomQueue}.
   \end{itemize}
-  To test our element, we first generate a high rate packet at input, store current timestamp, let packet go through our elements to output which has lower rate than the input. We then print out packet timestamps to see whether they are random or not.
-  \subsubsection{Using built-in Click elements (comppound element)}
+  To test our element, we first generate a high rate packet at input, store current timestamps, let packet go through our elements to output which has lower rate than the input. We then print out packet timestamps to see whether they are random or not.
+  \subsubsection{Using built-in Click elements (compound element)}
   We have implemented two versions:
   \begin{itemize}
-  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ posibilities created over total posibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasing timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
+  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasing timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
   	\item \texttt{2PRandomQueue} (Two Partition Random Queue): We expand the above idea with two queues and using Stride scheduler to join them to the output. Note that, dropped packets in the first queue are push to the second queue.
   \end{itemize}
   \begin{figure}[ht]
@@ -232,25 +232,72 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   \section{Shapers and Policers}
   \subsection{Uncontrolled flow}
   We have tried some implementations of uncontrolled flow but the main idea is that the inter-time (interval) between two consecutive packets is a random
-  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. Figure \ref{fig:probuncontrolledflow} shows the configuration of \texttt{ProbUncontrolledFlow} that each time one packet go out (to output), script \texttt{ScriptChangeRate} decides whether packet rate is changed or not with specific probability $p$.
+  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. Figure \ref{fig:probuncontrolledflow} shows the configuration of \texttt{ProbUncontrolledFlow} that each time one packet go out (to output), script \texttt{ScriptChangeRate} decides whether packet rate is changed or not with specified probability $p$.
   \begin{center}
-	\includegraphics[width=0.60\textwidth]{probuncontrolledflow}
+	\includegraphics[width=0.60\textwidth]{probuncontrolledflow.pdf}
 	\captionof{figure}{Uncontrolled flow with probability of changing rate source.}
 	\label{fig:probuncontrolledflow}
   \end{center}
   \subsection{Leaky bucket}
+  \begin{center}
+	\includegraphics[width=1.0\textwidth]{leaky-shaper.pdf}
+	\captionof{figure}{Leaky bucket with flow \texttt{ProbUncontrolledFlow}}
+	\label{fig:test-leaky}
+  \end{center}
+  
+  \begin{center}
+	\includegraphics[width=0.8\textwidth]{leaky-count.png}
+	\captionof{figure}{Monitor number of packets at input (uncontrolled flow) and output of leaky policer and shaper}
+	\label{fig:test-leakypolicer-graph}
+  \end{center} 
   
   \subsection{Token bucket}
+  \begin{center}
+	\includegraphics[width=1.0\textwidth]{token-shaper.pdf}
+	\captionof{figure}{Token bucket with flow \texttt{ProbUncontrolledFlow}}
+	\label{fig:test-token}
+  \end{center}
+  
+  \begin{center}
+	\includegraphics[width=0.8\textwidth]{token-count.png}
+	\captionof{figure}{Monitor number of packets at input (uncontrolled flow) and output of token policer and shaper}
+	\label{fig:test-tokenpolicer-graph}
+  \end{center} 
   \subsection{Cascading Leaky and Token bucket}
   \subsection{Negotiation (CIR, CBS, EBS)}
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{negotiation.png}
+	\captionof{figure}{One implementation of negotiating CIR, CBS, EBS}
+	\label{fig:negotiation}
+  \end{center}
+    
+    \begin{figure}
+    \centering
+    \includegraphics[width=0.80\textwidth]{negotiation-check.png}
+	  \captionof{figure}{Number of packets in a time $CBS/CIR$}
+	  \label{fig:negotiation-check}
+    \end{figure}
+  \subsection{Generic Cell Rate Algorithm - GCRA}  
   \section{Schedulers}
   \subsection{FIFO scheduler}
+  There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. 
   \subsection{Round Robin scheduler}
-  \subsection{Weighted Round Robin Scheduler}
+  Round Robin Scheduler is built-in element in Click. 
   \subsection{Deficit Round Robin scheduler}
-  \subsection{\texttt{SetVirtualClock} element}
+  Deficit Round Robin Scheduler is built-in element in Click. 
+  
+  \subsection{Weighted Round Robin Scheduler}
+  We implement this scheduler in two versions. The first is compound elements that based on Round Robin scheduler. The second is a new element.
+  \subsubsection{WRR scheduler - compound element}
+  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. In practice, we need to take care of distribution of ports to have the fairness in response time.
+  \subsubsection{WRR scheduler - new element}
+  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time.
   \subsection{Weighted Deficit Round Robin scheduler}
+  Not implement as a new Click element but only a compound element, similar to the compound element of WRR scheduler.
+  \subsection{\texttt{SetVirtualClock} element}
+  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. 
   \subsection{Virtual Clock scheduler}
+ 
   \subsection{Weighted Fair Queue scheduler}
   \section{Congestion control}
     \begin{center}
