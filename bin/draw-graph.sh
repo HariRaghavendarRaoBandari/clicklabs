@@ -37,7 +37,7 @@ option_config_add "--packet-count" \
 option_config_add "--xrange" \
                   "XRANGE" \
                   "1" \
-                  "Range of X axes (for example: 0:1, or 10:100, ...)"
+                  "Relative range of X axes, based time is the beginning time (for example: 0:1, or 10:100, ...)"
 option_config_add "--xlabel" \
                   "XLABEL" \
                   "1" \
@@ -223,11 +223,11 @@ else
   maxminx=`find_maxmin_x`
   x1=`echo $XRANGE | awk -F : '{printf "%.6f", $1}'`
   x2=`echo $XRANGE | awk -F : '{printf "%.6f", $2}'`
-  if [ `echo "$x1 == 0" | bc` -eq 1 ]; then
-    x1=$maxminx
-    x2=`echo $x1 $x2 | awk '{printf "%.6f", $1+$2}'`
-    XRANGE="$x1:$x2"
-  fi
+  #if [ `echo "$x1 == 0" | bc` -eq 1 ]; then
+  x1=`echo $x1 $maxminx | awk '{printf "%.6f", $1+$2}'`
+  x2=`echo $x2 $maxminx | awk '{printf "%.6f", $1+$2}'`
+  XRANGE="$x1:$x2"
+  #fi
   cat $PLOTSCRIPT | sed -e s/XRANGE/${XRANGE}/g > /tmp/tmpfile
   cat /tmp/tmpfile > $PLOTSCRIPT
 fi

@@ -21,10 +21,12 @@ set title "TITLE"
 set grid
 
 #set style data linespoints
-#set style data points
+set style data points
 #set style data dots
 #set style data fsteps
-set style data lines
+#set style data lines
+
+set pointsize 3
 
 set style line 1 lt 1 lw 1
 set style line 2 lt 2 lw 1
