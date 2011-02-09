@@ -80,13 +80,12 @@
         
         \item 
           While finishing to code some Click elements, put it in directory \texttt{elements}, and then run file \texttt{update-elements.sh} to compile and install new elements: \\
-    \texttt{chmod +x update-elements.sh\\
-    update-elements.sh}
+    \texttt{update-elements.sh}
         \item
         Explore the click configuration by using tool \texttt{visual-clicky.sh}. Simple way to use: \\    
     \texttt{visual-clicky.sh \$CLICK\_CONFIGURATION\_FILE}
         \item
-        To support easy-reading and team-working activities, we developed a tool to allow including some click files into a click file. If you write some click files as library files, you can reuse it by using 'include statement'. For example, we have \texttt{TCP\_Source.click} to implement a TCP-generator, and \texttt{UDP\_Source.click} to implement an UDP-generator. In \texttt{TCP\_UDP.click}, we reuse the implementation of these generator by adding these lines at anywhere in \texttt{TCP\_UDP.click} file (but should be on the top for easy reading): \\
+        To support easy-reading and team-working activities, we developed a tool to allow including some click files into a click file. If you write some Click files as "\textit{library}" files, you can reuse it by using \textit{include statements}. For example, we have \texttt{TCP\_Source.click} to implement a TCP-generator, and \texttt{UDP\_Source.click} to implement an UDP-generator. In \texttt{TCP\_UDP.click}, we reuse the implementation of these generator by adding these lines at anywhere in \texttt{TCP\_UDP.click} file (but should be on the top for easy reading): \\
         \texttt{
   ------------------------ file: TCP\_UDP.click ---------------------------\\
   //#include "TCP\_Source.click"\\
@@ -94,11 +93,11 @@
   ...\\
   -------------------------------------------------------------------------}\\
   The syntax of include statement is simple:\\
-          \texttt{//#include "CLICK\_FILE\_PATH"}\\
+          \texttt{//\#include "CLICK\_FILE\_PATH"}\\
   where \texttt{CLICK\_FILE\_PATH} can be relative or absolute path. After that, you have to use our tool (\texttt{eclick-compile.sh}) to pre-compile this file before simulating it by Click, for example:\\
     \texttt{eclick-compile.sh -o extend-TCP\_UDP.click [-f] TCP\_UDP.click}\\
-Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended-click file. It will do automatically.
-        \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. Normally, we usually generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is running this command:\\
+Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the extended-click file. It will do all automatically.
+        \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. Normally, we usually generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is to run this command:\\
 \texttt{draw-graph.sh -f dataIn.dump -f dataOut.dump \\
       $[$-o PNG\_FILES$]$\\
       $[$--plot-type COUNT (default) | RATE | DENSITY$]$\\
@@ -109,7 +108,7 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   After program \texttt{draw-graph.sh} finishes its work, it will create a picture file (PNG file). If user does not use output option (-o), this program will export to screen (using default output file \texttt{/dev/output}). You may want to change the plotting template by modify files in \texttt{plot-template} directory.
       \end{enumerate}
   \section{Test configuration}
-  In the first time of using click, we try to implement \texttt{Counter\_test} element, \texttt{Random\_IP\_generator} element using basic Click elements, such as \texttt{Print, InfiniteSource, RatedSource, Script}, also trying to modify a part of source code of \texttt{InfiniteSource} to generate packets that randomize byte value at a specific location in payload.
+  In the first time of using Click, we try to implement \texttt{Counter\_test} element, \texttt{Random\_IP\_generator} element using basic Click elements, such as \texttt{Print, InfiniteSource, RatedSource, Script}, also trying to modify a part of source code of \texttt{InfiniteSource} to generate packets that randomize byte value at a specific location in payload.
   \subsection{\texttt{Counter\_test} Click configuration}
   \begin{center}
 	  \includegraphics[scale=0.6]{counter_test.pdf}
@@ -254,7 +253,7 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
   \subsection{Token bucket}
   \begin{center}
 	\includegraphics[width=1.0\textwidth]{token-shaper.pdf}
-	\captionof{figure}{Token bucket with flow \texttt{ProbUncontrolledFlow}}
+	\captionof{figure}{Token bucket configuration \texttt{RatedTokenBucketShaper3}}
 	\label{fig:test-token}
   \end{center}
   
@@ -263,6 +262,13 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
 	\captionof{figure}{Monitor number of packets at input (uncontrolled flow) and output of token policer and shaper}
 	\label{fig:test-tokenpolicer-graph}
   \end{center} 
+
+  \begin{center}
+	\includegraphics[width=0.8\textwidth]{compare-lk-tk.png}
+	\captionof{figure}{Comparision of Token bucket and Leaky bucket}
+	\label{fig:test-tokenpolicer-graph}
+  \end{center} 
+  
   \subsection{Cascading Leaky and Token bucket}
   \subsection{Negotiation (CIR, CBS, EBS)}
   \begin{center}
@@ -278,25 +284,77 @@ Note: if using tool visual-clicky.sh, you don't have to pre-compile the extended
 	  \label{fig:negotiation-check}
     \end{figure}
   \subsection{Generic Cell Rate Algorithm - GCRA}  
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{gcra.pdf}
+	\captionof{figure}{\texttt{GCRA} configuration}
+	\label{fig:gcra}
+  \end{center}
+  
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{test-gcra.png}
+	\captionof{figure}{Testing GCRA configuration with flow \texttt{ProbUncontrolledFlow}}
+	\label{fig:test-gcra}
+  \end{center}
+  
   \section{Schedulers}
   \subsection{FIFO scheduler}
   There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{fifo-dense.png}
+	\captionof{figure}{Testing \texttt{FIFOSched} configuration}
+	\label{fig:test-fifo}
+  \end{center}
+  
   \subsection{Round Robin scheduler}
   Round Robin Scheduler is built-in element in Click. 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{rr-dense.png}
+	\captionof{figure}{Testing \texttt{RRSched} configuration}
+	\label{fig:test-rr}
+  \end{center}
+  
   \subsection{Deficit Round Robin scheduler}
   Deficit Round Robin Scheduler is built-in element in Click. 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{drr-dense.png}
+	\captionof{figure}{Testing \texttt{DRRSched} configuration}
+	\label{fig:test-drr}
+  \end{center}
   
   \subsection{Weighted Round Robin Scheduler}
   We implement this scheduler in two versions. The first is compound elements that based on Round Robin scheduler. The second is a new element.
   \subsubsection{WRR scheduler - compound element}
   This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. In practice, we need to take care of distribution of ports to have the fairness in response time.
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{wrr2-dense.png}
+	\captionof{figure}{Testing \texttt{WRRSched} compound element}
+	\label{fig:test-wrr-compound}
+  \end{center}
+  
   \subsubsection{WRR scheduler - new element}
   Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time.
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{wrr-dense.png}
+	\captionof{figure}{Testing \texttt{WRRSched} element}
+	\label{fig:test-wrr}
+  \end{center}
+
   \subsection{Weighted Deficit Round Robin scheduler}
   Not implement as a new Click element but only a compound element, similar to the compound element of WRR scheduler.
   \subsection{\texttt{SetVirtualClock} element}
   It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. 
   \subsection{Virtual Clock scheduler}
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{test-vcsched.pdf}
+	\captionof{figure}{\texttt{VirtualClock} scheduler with 3 flows}
+	\label{fig:vcsched}
+  \end{center}
+ 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{vcs-dense.png}
+	\captionof{figure}{Testing \texttt{VirtualClock} scheduler with 3 flows}
+	\label{fig:test-vcs}
+  \end{center}
  
   \subsection{Weighted Fair Queue scheduler}
   \section{Congestion control}

@@ -97,15 +97,15 @@ Sched::WRRSched();
 
 // Initialize flows
 s0::RatedSource(LENGTH 1000, RATE 125, ACTIVE true);
-s1::RatedSource(LENGTH 1000, RATE 250, ACTIVE true);
+s1::RatedSource(LENGTH 1000, RATE 250, ACTIVE false);
 s2::RatedSource(LENGTH 1000, RATE 375, ACTIVE true);
-s3::RatedSource(LENGTH 1000, RATE 500, ACTIVE true);
-s4::RatedSource(LENGTH 1000, RATE 625, ACTIVE true);
+s3::RatedSource(LENGTH 1000, RATE 500, ACTIVE false);
+s4::RatedSource(LENGTH 1000, RATE 625, ACTIVE false);
 s5::RatedSource(LENGTH 1000, RATE 750, ACTIVE true);
-s6::RatedSource(LENGTH 1000, RATE 875, ACTIVE true);
-s7::RatedSource(LENGTH 1000, RATE 1000, ACTIVE true);
-s8::RatedSource(LENGTH 1000, RATE 1125, ACTIVE true);
-s9::RatedSource(LENGTH 1000, RATE 1250, ACTIVE true);
+s6::RatedSource(LENGTH 1000, RATE 875, ACTIVE false);
+s7::RatedSource(LENGTH 1000, RATE 1000, ACTIVE false);
+s8::RatedSource(LENGTH 1000, RATE 1125, ACTIVE false);
+s9::RatedSource(LENGTH 1000, RATE 1250, ACTIVE false);
 
 s0 -> Paint(0) -> [0]Sched;
 s1 -> Paint(1) -> [1]Sched;
@@ -120,15 +120,17 @@ s9 -> Paint(9) -> [9]Sched;
 
 Sched
   //Pull-to-Push Converter
-  -> link::LinkUnqueue(10000us, 55Mbps) 
+  //-> link::LinkUnqueue(10000us, 55Mbps) 
+  -> TimedUnqueue(0.1,1)
+  -> SetTimestamp
   -> ps::PaintSwitch;
 
-ps[0] -> c0::Counter -> Discard;
+ps[0] -> ToDump(output-w1, SNAPLEN 1) -> c0::Counter -> Discard;
 ps[1] -> c1::Counter -> Discard;
-ps[2] -> c2::Counter -> Discard;
+ps[2] -> ToDump(output-w3, SNAPLEN 1) -> c2::Counter -> Discard;
 ps[3] -> c3::Counter -> Discard;
 ps[4] -> c4::Counter -> Discard;
-ps[5] -> c5::Counter -> Discard;
+ps[5] -> ToDump(output-w6, SNAPLEN 1) -> c5::Counter -> Discard;
 ps[6] -> c6::Counter -> Discard;
 ps[7] -> c7::Counter -> Discard;
 ps[8] -> c8::Counter -> Discard;

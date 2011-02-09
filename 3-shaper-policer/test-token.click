@@ -29,28 +29,28 @@
 //flow3 -> ToDump(dumpin) -> Discard; //-> tee::Tee(4);
 
 //tee[0] 
-FromDump(dumpin, TIMING true)
-//Idle
-  -> RatedTokenBucketPolicer3(RATE 10, BURST 10, INTERVAL 0.1)
-  -> SetTimestamp
-  -> ToDump(dumpout_tk, SNAPLEN 1) 
-  -> Discard;
-
 //FromDump(dumpin, TIMING true)
+//Idle
+//  -> RatedTokenBucketPolicer3(RATE 10, BURST 10, INTERVAL 0.1)
+//  -> SetTimestamp
+//  -> ToDump(dumpout_tk, SNAPLEN 1) 
+//  -> Discard;
+
+FromDump(dumpin, TIMING true)
 //tee[1]
 //Idle
-//-> RatedTokenBucketShaper3(RATE 10, INTERVAL 0.1, BURST 10, SIZE 10)
+-> RatedTokenBucketShaper3(RATE 10, INTERVAL 0.1, BURST 10, SIZE 10)
 //-> SetTimestamp
 //-> ToDump(dumpout_tk_shaper, SNAPLEN 1) 
-//-> Discard;
+-> Discard;
 
 //tee[2]
 //Idle
-FromDump(dumpin, TIMING true)
--> RatedLeakyBucketPolicer(RATE 10,  INTERVAL 0.1)
--> SetTimestamp
--> ToDump(dumpout_lk, SNAPLEN 1)
--> Discard;
+//FromDump(dumpin, TIMING true)
+//-> RatedLeakyBucketPolicer(RATE 10,  INTERVAL 0.1)
+//-> SetTimestamp
+//-> ToDump(dumpout_lk, SNAPLEN 1)
+//-> Discard;
 
 //tee[3]
 //Idle

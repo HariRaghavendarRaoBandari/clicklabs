@@ -37,6 +37,7 @@ elementclass TokenBucketShaper {
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
     -> shaper::Shaper(RATE $rate)
+    -> Unqueue(BURST $burst)
     -> policer
     -> output;
 
@@ -82,6 +83,7 @@ input
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
     -> shaper::Shaper(RATE $rate)
+    -> Unqueue(BURST $burst)
     -> policer
     -> output;
 
@@ -122,6 +124,7 @@ elementclass RatedTokenBucketShaper1 {
     -> q::Queue($size)
     //-> shaper::RatedUnqueue(RATE $rate)
     -> shaper::Shaper(RATE $rate)
+    -> Unqueue(BURST $burst)
     -> policer
     -> output;
 }
@@ -161,6 +164,7 @@ elementclass RatedTokenBucketShaper2 {
   input
     -> q::Queue($size)
     -> shaper::Shaper(RATE $rate)
+    -> Unqueue(BURST $burst)
     -> policer
     -> output;
 }

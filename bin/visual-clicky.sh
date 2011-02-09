@@ -6,10 +6,10 @@ CLICKLABS_HOME=$FILEDIR/..
 source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 
 clean () {
-  if [ "$NOCLICKY" == "false" ]; then
+#  if [ "$NOCLICKY" == "false" ]; then
     killall -9 click 2>/dev/null
     killall -9 clicky 2>/dev/null
-  fi
+#  fi
   rm -f $ECLICK_FILE 2>/dev/null
 }
 
@@ -71,7 +71,7 @@ eclick-compile.sh -f $CLICK_FILE -o $ECLICK_FILE
 #Click
 
 if [ "$NOCLICKY" == "true" ]; then
-  click --no-warning -R -f $ECLICK_FILE 1>/dev/null 
+  click -f $ECLICK_FILE  
 else
   click --no-warning -R -p $PORT -f $ECLICK_FILE 1>/dev/null & 
   sleep 1

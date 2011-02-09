@@ -1,21 +1,28 @@
 // VC_Sched.click
 // Simulate Virtual Clock Scheduling
 
-elementclass 2flows_VCSched {
-  RATE1 $rate1, RATE2 $rate2 |
+elementclass 3flows_VCSched {
+  $rate1, $rate2, $rate3 |
   tss::TimeSortedSched;
   
   input[0]
   -> Paint(0)
-  -> SetVirtualClock(RATE $rate1)
+  -> SetVirtualClock(RATE $rate1, MAXBW 3, CURRENTBW 1)
   -> Queue
   -> [0] tss;
 
   input[1]
   -> Paint(1)
-  -> SetVirtualClock(RATE $rate2)
+  -> SetVirtualClock(RATE $rate2, MAXBW 3, CURRENTBW 1)
   -> Queue
   -> [1] tss;
+
+  input[2]
+  -> Paint(2)
+  -> SetVirtualClock(RATE $rate3, MAXBW 3, CURRENTBW 1)
+  -> Queue
+  -> [2] tss;
+
   tss
   -> output;
 }
@@ -28,23 +35,36 @@ elementclass 2flows_VCSched {
 //-> Discard;
 
 // This code implement VC Sched based on TimeSortedSched
-vcsched::2flows_VCSched(RATE1 1, RATE2 2);
+vcsched::3flows_VCSched(1,1,3);
 
-RatedSource(RATE 1, LENGTH 10, STOP false, LIMIT 5)
+RatedSource(RATE 1, LENGTH 1, STOP false, LIMIT 10)
 -> [0]vcsched; 
 
-RatedSource(RATE 2, LENGTH 10, STOP false, LIMIT 5)
+RatedSource(RATE 1, LENGTH 1, STOP false, LIMIT 10)
 -> [1]vcsched;
 
+Delay3::Script(TYPE ACTIVE, wait 5, write s3.active true);
+s3::RatedSource(RATE 3, LENGTH 1, STOP false, LIMIT 10, ACTIVE false)
+-> [2]vcsched;
+
 vcsched
--> Unqueue
+-> TimedUnqueue(1,1)
+
+-> SetTimestamp
 -> ps::PaintSwitch;
 
 ps[0]
--> Print("flow 0", 1, TIMESTAMP true)
+-> ToDump(out0, SNAPLEN 1)
+//-> Print("flow 0", 1, TIMESTAMP true)
 -> Discard;
 
 ps[1]
--> Print("flow 1", 1, TIMESTAMP true)
+-> ToDump(out1, SNAPLEN 1)
+//-> Print("flow 1", 1, TIMESTAMP true)
+-> Discard;
+
+ps[2]
+-> ToDump(out2, SNAPLEN 1)
+//-> Print("flow 2", 1, TIMESTAMP true)
 -> Discard;
 

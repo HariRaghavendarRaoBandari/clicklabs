@@ -67,14 +67,15 @@ SetVirtualClock::simple_action(Packet *p)
     return p;
 
   uint32_t len = p->length();
+  double d = (double)((double)len/(double)rate);
   Timestamp now_real_tv = Timestamp::now();
-  Timestamp now_virtual_tv = last_virtual_tv + (now_real_tv - last_real_tv)*maxbw/currentbw;
+  Timestamp now_virtual_tv = last_virtual_tv + (now_real_tv - last_real_tv)*(double)maxbw/(double)currentbw;
 
   if (last_tag_tv > now_virtual_tv) 
-    p->timestamp_anno() = last_tag_tv + (Timestamp)(len/rate);
+    p->timestamp_anno() = last_tag_tv + (Timestamp)(d);
   else
-    p->timestamp_anno() = now_virtual_tv + (Timestamp)(len/rate);
-
+    p->timestamp_anno() = now_virtual_tv + (Timestamp)(d);
+  //click_chat("d = %d\n", d);
   last_tag_tv = p->timestamp_anno();
   last_real_tv = now_real_tv;
   last_virtual_tv = now_virtual_tv;
