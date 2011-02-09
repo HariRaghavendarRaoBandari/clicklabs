@@ -34,25 +34,29 @@ elementclass LeakyBucketShaper {
 //Rated prefix: packets per sec.
 //Bandwidth prefix: bits per sec.
 elementclass RatedLeakyBucketPolicer {
-  RATE $rate |
+  RATE $rate, INTERVAL $i |
 
-  rs::RatedSplitter(RATE $rate);
+  Init::Script(TYPE ACTIVE, write s.switch $(if $(lt $rate 1000) 1 0));
+  //rs::RatedSplitter(RATE $rate);
+
   //With BandwidthMeter, stream (all packets) is dropped
   //rs::BandwidthMeter($rate);
-  input -> rs;
-  rs[0] -> output;
-  rs[1] -> Discard;
+  
+  input -> s::Switch(1) -> qr::SimpleQueue(1) -> RatedUnqueue($rate) -> output;
+  s[1] -> qt::SimpleQueue(1) -> TimedUnqueue($i, 1) -> output;
+  //rs[1] -> Discard;
+  qr[1] -> Discard;
+  qt[1] -> Discard;
 }
 
 elementclass RatedLeakyBucketShaper {
-  SIZE $size, RATE $rate |
+  SIZE $size, RATE $rate, INTERVAL $i |
 
   input
 //  -> red::RED(100, $size, 0.01)
   -> q::Queue($size)
   -> RatedUnqueue($rate)
-  -> RatedLeakyBucketPolicer(RATE $rate)
+  -> RatedLeakyBucketPolicer(RATE $rate, INTERVAL $i)
   -> output;
-
 }
 

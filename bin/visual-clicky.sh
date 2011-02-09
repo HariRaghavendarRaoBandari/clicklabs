@@ -6,8 +6,10 @@ CLICKLABS_HOME=$FILEDIR/..
 source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
 
 clean () {
-  killall -9 click 2>/dev/null
-  killall -9 clicky 2>/dev/null
+  if [ "$NOCLICKY" == "false" ]; then
+    killall -9 click 2>/dev/null
+    killall -9 clicky 2>/dev/null
+  fi
   rm -f $ECLICK_FILE 2>/dev/null
 }
 
@@ -37,6 +39,10 @@ option_config_add "-p" "PORT" "1" "Port"
 option_config_add "--port" "PORT" "1" "Port"
 option_config_add "-s" "CCSS_FILE" "1" "CCSS File used to make decoration on clicky"
 option_config_add "--ccss" "CCSS_FILE" "1" "CCSS File used to make decoration on clicky"
+option_config_add "--noclicky" \
+                  "NOCLICKY" \
+                  "0" \
+                  "Do not use clicky to visualize configuration (only use click to trace something)."
 
 option_parse "$@"
 
@@ -59,11 +65,16 @@ if [ "$CLICK_FILE" = "" ]; then
 fi
 
 #Support Extended-Click file
-ECLICK_FILE=/tmp/`date +%s`-`basename $CLICK_FILE`
+ECLICK_FILE=./`date +%s`-`basename $CLICK_FILE`
 #Generate normal click file from extended-click file
 eclick-compile.sh -f $CLICK_FILE -o $ECLICK_FILE
 #Click
-click --no-warning -R -p $PORT -f $ECLICK_FILE 1>/dev/null & 
-sleep 1
-clicky -p $PORT -s $CCSS_FILE 2>/dev/null 
+
+if [ "$NOCLICKY" == "true" ]; then
+  click --no-warning -R -f $ECLICK_FILE 1>/dev/null 
+else
+  click --no-warning -R -p $PORT -f $ECLICK_FILE 1>/dev/null & 
+  sleep 1
+  clicky -p $PORT -s $CCSS_FILE 2>/dev/null 
+fi
 rm -f $ECLICK_FILE 2>/dev/null

@@ -115,10 +115,16 @@ if [ "$MULTIPLOT" == "" ]; then
 fi
 
 if [ "$TEMPLATE" == "" ]; then
-  if [ "$MULTIPLOT" == "false" ]; then
-    TEMPLATE=$LABHOME/plot-template/draw-graph.pg.template
+  if [ "$MULTIPLOT" == "true" ]; then
+    if [ "$PLOTTYPE" != "DENSE" ]; then
+      TEMPLATE=$LABHOME/plot-template/draw-graph-multiplot.pg.template
+    else
+      TEMPLATE=$LABHOME/plot-template/draw-graph-mplot-dense.pg.template
+    fi
+  elif [ "$PLOTTYPE" == "DENSE" ]; then
+    TEMPLATE=$LABHOME/plot-template/draw-graph-dense.pg.template
   else
-    TEMPLATE=$LABHOME/plot-template/draw-graph-multiplot.pg.template
+    TEMPLATE=$LABHOME/plot-template/draw-graph.pg.template
   fi
 fi
 
@@ -246,7 +252,7 @@ else
   register_tmp_file /tmp/tmpfile
 
   if [ "$PLOTTYPE" == "DENSITY" ]; then
-    cat $PLOTSCRIPT | sed -e s/YRANGE/0:2/g > /tmp/tmpfile
+    cat $PLOTSCRIPT | sed -e s/YRANGE/0:1.2/g > /tmp/tmpfile
   else
     cat $PLOTSCRIPT | sed -e s/YRANGE/${YRANGE}/g > /tmp/tmpfile
   fi
@@ -276,9 +282,9 @@ count=0
 for f in $DATA; do
   if [ "$MULTIPLOT" == "false" ]; then
     if [ $count -eq 0 ]; then
-      PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+      PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\"\\"
     else
-      PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\" \\"
+      PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\"\\"
     fi
   else
     PLOTSTR="set origin DX,DY+SY*$count; plot \"$f\" using $XCOL:$YCOL title \"`basename $f`\";"

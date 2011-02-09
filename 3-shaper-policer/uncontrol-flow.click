@@ -140,19 +140,41 @@ elementclass ProbUncontrolledFlow {
   -> output;
 }
 
-elementclass BurstUncontrolledFlow {
-  RATE $rate |
+elementclass ProbRatedSource {
+  RATE $rate, PROB $prob |
 
-  s1::RatedSource(RATE $rate, LENGTH 1);
-  s2::RatedSource(RATE $rate, LENGTH 1);
-  Filter::Script(TYPE PACKET, 
-    //goto DROP $(lt $(mod $(random) 100) 40),
+  s::RatedSource(RATE $rate, LENGTH 1);
+  Filter::Script(TYPE PACKET,
+    goto DROP $(lt $(div $(mod $(random) 100) 100) $prob),
     end,
     label DROP,
     exit
   );
-  s1 -> Filter -> ThreadSafeQueue(10) -> Unqueue -> output;
-  s2 -> Filter;
+  s -> Filter -> output;
+}
+
+elementclass BurstUncontrolledFlow {
+  RATE $rate |
+
+  s1::ProbRatedSource(RATE $rate, PROB O);
+  s2::ProbRatedSource(RATE $rate, PROB 0);
+  s3::ProbRatedSource(RATE $rate, PROB 0);
+  s4::ProbRatedSource(RATE $rate, PROB 0);
+  s5::ProbRatedSource(RATE $rate, PROB 0);
+  s6::ProbRatedSource(RATE $rate, PROB 0);
+  s7::ProbRatedSource(RATE $rate, PROB 0);
+  s8::ProbRatedSource(RATE $rate, PROB 0);
+
+  q::ThreadSafeQueue(100);
+  s1 -> q;
+  s2 -> q;
+  s3 -> q;
+  s4 -> q;
+  s5 -> q;
+  s6 -> q;
+  s7 -> q;
+  s8 -> q;
+  q -> Unqueue(BURST 8) -> output;
 }
 
 //flow0::SimpleUncontrolledFlow(MAXRATE 100)

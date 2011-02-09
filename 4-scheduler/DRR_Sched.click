@@ -2,28 +2,29 @@
 // Simulate DRR scheduler with at most 10 inputs (flows)
 
 elementclass DRRSched {
+  SIZE $s |
   drrs::DRRSched;
-  input[0] -> q0::Queue(1000) -> [0]drrs;
-  input[1] -> q1::Queue(1000) -> [1]drrs;
-  input[2] -> q2::Queue(1000) -> [2]drrs;
-  input[3] -> q3::Queue(1000) -> [3]drrs;
-  input[4] -> q4::Queue(1000) -> [4]drrs;
-  input[5] -> q5::Queue(1000) -> [5]drrs;
-  input[6] -> q6::Queue(1000) -> [6]drrs;
-  input[7] -> q7::Queue(1000) -> [7]drrs;
-  input[8] -> q8::Queue(1000) -> [8]drrs;
-  input[9] -> q9::Queue(1000) -> [9]drrs;
+  input[0] -> q0::Queue($s) -> [0]drrs;
+  input[1] -> q1::Queue($s) -> [1]drrs;
+  input[2] -> q2::Queue($s) -> [2]drrs;
+  input[3] -> q3::Queue($s) -> [3]drrs;
+  input[4] -> q4::Queue($s) -> [4]drrs;
+  input[5] -> q5::Queue($s) -> [5]drrs;
+  input[6] -> q6::Queue($s) -> [6]drrs;
+  input[7] -> q7::Queue($s) -> [7]drrs;
+  input[8] -> q8::Queue($s) -> [8]drrs;
+  input[9] -> q9::Queue($s) -> [9]drrs;
   drrs -> output;
 }
 
-Sched::DRRSched();
+Sched::DRRSched(SIZE 10);
 
 // Initialize flows
-s0::RatedSource(LENGTH 1000, RATE 100, ACTIVE true);
-s1::RatedSource(LENGTH 1000, RATE 200, ACTIVE true);
-s2::RatedSource(LENGTH 1000, RATE 400, ACTIVE true);
-s3::RatedSource(LENGTH 1000, RATE 800, ACTIVE true);
-s4::RatedSource(LENGTH 1000, RATE 100, ACTIVE true);
+s0::RatedSource(LENGTH 500, RATE 30, ACTIVE true);
+s1::RatedSource(LENGTH 1000, RATE 60, ACTIVE true);
+s2::RatedSource(LENGTH 1500, RATE 90, ACTIVE true);
+s3::RatedSource(LENGTH 1000, RATE 800, ACTIVE false);
+s4::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
 s5::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
 s6::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
 s7::RatedSource(LENGTH 1000, RATE 100, ACTIVE false);
@@ -43,12 +44,14 @@ s9 -> Paint(9) -> [9]Sched;
 
 Sched
   //Pull-to-Push Converter
-  -> LinkUnqueue(10000us, 10Mbps)
+  //-> LinkUnqueue(10000us, 10Mbps)
+  -> RatedUnqueue(20)
+  -> SetTimestamp
   -> ps::PaintSwitch;
 
-ps[0] -> c0::Counter -> Discard;
-ps[1] -> c1::Counter -> Discard;
-ps[2] -> c2::Counter -> Discard;
+ps[0] -> ToDump(out0-50, SNAPLEN 1) -> c0::Counter -> Discard;
+ps[1] -> ToDump(out1-100, SNAPLEN 1) -> c1::Counter -> Discard;
+ps[2] -> ToDump(out2-150, SNAPLEN 1) -> c2::Counter -> Discard;
 ps[3] -> c3::Counter -> Discard;
 ps[4] -> c4::Counter -> Discard;
 ps[5] -> c5::Counter -> Discard;

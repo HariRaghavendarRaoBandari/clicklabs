@@ -3,8 +3,7 @@
 FILEDIR=$(dirname $(which $BASH_SOURCE))
 # Bash shell script library functions
 source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
-FILEDIR=$(get_abs_path $FILEDIR)
-
+FILEDIR=$(get_abs_path "$FILEDIR/../.")
 clean () {
   killall -9 click 2>/dev/null
   killall -9 clicky 2>/dev/null
@@ -36,10 +35,10 @@ if [ "$HELP" == "true" ]; then
 fi
 
 #Setting environment variables
-if [ -f $FILEDIR/visual-clicky.sh ]; then
+if [ -f $FILEDIR/bin/visual-clicky.sh ]; then
   #Setting PATH for visual-click
-  EXPSTR="export PATH=\$PATH:$FILEDIR"
-  count=`cat ~/.bashrc|grep -e "export PATH=\\\$PATH:$FILEDIR"|wc -l`
+  EXPSTR="export PATH=\$PATH:$FILEDIR/bin"
+  count=`cat ~/.bashrc|grep -e "export PATH=\\\$PATH:$FILEDIR/bin"|wc -l`
   if [ $count -eq 0 ]; then
     echo $EXPSTR >> ~/.bashrc
   fi
@@ -79,10 +78,10 @@ fi
 #Setting CLICK_INCLUDE_PATH for 'include' in click configuration
 count=`cat ~/.clickrc | grep "export CLICK_INCLUDE_PATH" | wc -l`
 if [ $count -eq 0 ]; then
-  echo "export CLICK_INCLUDE_PATH=${FILEDIR}/1-test-config:${FILEDIR}/2-tcp-udp-generation:${FILEDIR}/3-shaper-policer:${FILEDIR}/4-scheduler" >> ~/.clickrc
+  echo "export CLICK_INCLUDE_PATH=${FILEDIR}/1-test-config:${FILEDIR}/2-tcp-udp-generation:${FILEDIR}/3-shaper-policer:${FILEDIR}/4-scheduler:${FILEDIR}/5-congestion" >> ~/.clickrc
 fi
 #Update new elements
-source $FILEDIR/update-elements.sh
+source $FILEDIR/bin/update-elements.sh
 
 #Finish
 print_warn "Now, you need to open and work in a new console to use new

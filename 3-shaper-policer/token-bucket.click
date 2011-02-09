@@ -36,7 +36,7 @@ elementclass TokenBucketShaper {
   input
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
-    -> shaper::RatedUnqueue(RATE $rate)
+    -> shaper::Shaper(RATE $rate)
     -> policer
     -> output;
 
@@ -81,7 +81,7 @@ elementclass RatedTokenBucketShaper {
 input
     -> red::RED(100, $size, 0.01)
     -> q::Queue($size)
-    -> shaper::RatedUnqueue(RATE $rate)
+    -> shaper::Shaper(RATE $rate)
     -> policer
     -> output;
 
@@ -121,7 +121,7 @@ elementclass RatedTokenBucketShaper1 {
   input
     -> q::Queue($size)
     //-> shaper::RatedUnqueue(RATE $rate)
-    -> shaper::TimedUnqueue($interval, $burst)
+    -> shaper::Shaper(RATE $rate)
     -> policer
     -> output;
 }
@@ -155,12 +155,38 @@ elementclass RatedTokenBucketPolicer2 {
 }
 
 elementclass RatedTokenBucketShaper2 {
-  SIZE $size, RATE $rate, INTERVAL $interval, BURSTP $burstp, BURSTS $bursts|
+  SIZE $size, RATE $rate, BURST $burst|
 
-  policer::RatedTokenBucketPolicer2(RATE $rate, BURST $burstp);
+  policer::RatedTokenBucketPolicer2(RATE $rate, BURST $burst);
   input
     -> q::Queue($size)
-    -> shaper::TimedUnqueue($interval, $bursts)
+    -> shaper::Shaper(RATE $rate)
+    -> policer
+    -> output;
+}
+
+elementclass RatedTokenBucketPolicer3 {
+  RATE $rate, INTERVAL $t, BURST $burst |
+
+  Init::Script(TYPE ACTIVE, write s.switch $(if $(lt $rate 1000) 1 0));
+  //rs::RatedSplitter(RATE $rate);
+
+  //With BandwidthMeter, stream (all packets) is dropped
+  //rs::BandwidthMeter($rate);
+
+  input -> s::Switch(1) -> Queue($burst) -> RatedUnqueue($rate) -> output;
+  s[1] -> Queue($burst) -> TimedUnqueue($t, 1) -> output;
+  //rs[1] -> Discard;
+}
+
+elementclass RatedTokenBucketShaper3 {
+  SIZE $size, RATE $rate, INTERVAL $t, BURST $burst|
+
+  policer::RatedTokenBucketPolicer3(RATE $rate, INTERVAL $t, BURST $burst);
+  input
+    -> q::Queue($size)
+    -> shaper::Shaper(RATE $rate)
+    -> Unqueue(BURST $burst)
     -> policer
     -> output;
 }

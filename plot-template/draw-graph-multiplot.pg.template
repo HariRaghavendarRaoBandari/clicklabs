@@ -28,8 +28,8 @@ set title "TITLE"
 
 set grid
 
-set style data points
-
+#set style data points
+set style data impulses
 set style line 1 lt 1 lw 1
 set style line 2 lt 2 lw 1
 set style line 3 lt 3 lw 1

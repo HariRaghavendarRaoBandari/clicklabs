@@ -6,7 +6,7 @@
 
 //flow0::BandwidthUncontrolledFlow (RATE 500000, BURST 10);
 //flow1::BandwidthUncontrolledFlow (RATE 500000, BURST 10);
-//flow2::ProbUncontrolledFlow (MAXRATE 100, PROB_CHANGE 0.6);
+flow2::ProbUncontrolledFlow (MAXRATE 1000, PROB_CHANGE 0.2);
 
 //flow0 -> c1::Counter -> LeakyBucketPolicer(RATE 4000 kbps) -> c2::Counter ->
 //Discard;
@@ -17,14 +17,20 @@
 //      -> ToDump(dumpout, SNAPLEN 1)
 //      -> Discard;
 
-//flow2 -> ToDump(dumpin)
-//      -> c3::Counter -> RatedLeakyBucketPolicer(RATE 10)
+flow2 -> ToDump(dumpin)
+      -> tee::Tee (2);
+tee[0]
+      //-> c3::Counter 
+      -> RatedLeakyBucketPolicer(RATE 400)
       //-> Queue (60) -> RatedUnqueue(10)
-//      -> c4::Counter
-//      -> ToDump(dumpout)
-//      -> Discard;
+      //-> c4::Counter
+      -> SetTimestamp
+      -> ToDump(dumpout)
+      -> Discard;
 
-FromDump(./dumpin, TIMING true, STOP true)
--> RatedLeakyBucketShaper(SIZE 100, RATE 10)
+//FromDump(./dumpin, TIMING true, STOP true)
+tee[1]
+-> RatedLeakyBucketShaper(SIZE 2000, RATE 400)
+-> SetTimestamp
 -> ToDump(dumpout_shaper)
 -> Discard;
