@@ -280,9 +280,9 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{Token bucket}
   \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
-  Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burstiness, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
+  Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
   \begin{itemize}
-  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decrease one. 
+  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decrease one. To allow repeat burst at any interval time, this element uses flag REPEATED.
   	\item \texttt{RatedTokenBucketPolicer2}: This element use a sample source (same rate as token bucket, operating as a token generator) and two counter to count the number of output packets ($CI$) and the number of generated token packets ($CT$). This element guarantees that: $CI \le CT \le CI + burst$. If this condition is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (there is no queue to store input packets) while other implementations try to store input packets first and then regulate the output flow at a specific rate.
   \end{itemize} 
   \begin{center}
@@ -297,7 +297,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\label{fig:test-tokenpolicer-graph}
   \end{center} 
 
-  Figure \ref{fig:test-token-leaky-graph} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{BurstUncontrolledFlow}  (rate is 1 pps and maximum burst is 8) by a token and a leaky bucket policer. Token bucket policer is \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10), and leaky policer is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). We see that token policer can allow some burstiness but leaky policer limits the burstiness.
+  Figure \ref{fig:test-token-leaky-graph} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{BurstUncontrolledFlow}  (rate is 1 pps and maximum burst is 8) by a token and a leaky bucket policer. Token bucket policer is \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10), and leaky policer is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). We see that token policer can allow some burst duration but leaky policer limits it.
   \begin{center}
 	\includegraphics[width=0.8\textwidth]{compare-lk-tk.png}
 	\captionof{figure}{Comparision of Token bucket and Leaky bucket}
@@ -309,13 +309,18 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   If token bucket is put before leaky bucket, the leaky policer will not allow burstiness from token policer or shaper if rate of leaky is smaller than the peak rate of token.  
   \subsection{Negotiation (CIR, CBS, EBS)}
   \textbf{Location:} \texttt{3-shaper-policer/negotiation.click} \\
-  Figure \ref{fig:negotiation} shows one implementation of negotiation. The idea is: packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1.
+  Figure \ref{fig:negotiation} shows one implementation of negotiation (\texttt{RatedNegotiablePolicer4}). The idea is: packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1. \\
+  We brieftly describe other implementations of negotiation which can be found in \texttt{negotiation.click} as following:
+  \begin{itemize}
+  	\item \texttt{RatedNegotiablePolicer1}: input packets are stored in a queue with length $(CBS + EBS)$. At each interval $T = \frac{CBS}{CIR}$, all packets in queue are released. This implementation is simple with only one \texttt{TimedUnqueue} to control $T$, one Queue to do negotiation. To recognize high and low priority, at each packet, before storing it in queue, we check if queue length is larger than $CBS$ then its priority is low. However, this element is a non-work-conserving element, so we only consider it when $T$ is small (should be $T \le 1$, or the best case is $CBS = 1$).
+  	\item \texttt{RatedNegotiablePolicer2}: input packets are gone through \texttt{RatedLeakyBucketShaper} (with leaky rate $R_L = \frac{CIR * (CBS + EBS)}{CBS}$) and then gone through \texttt{RatedTokenBucketShaper2} (with token rate $R_L = CIR$ and burst duration is $EBS$). At output, we gurantee that in interval time $T = \frac{CBS}{CIR}$, maximum number of output packet is $(CBS + EBS)$ and flow is shapped to rate $CIR$ with a maximum burst duration $EBS$. 
+  \end{itemize}
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{negotiation.png}
 	\captionof{figure}{One implementation of negotiating CIR, CBS, EBS}
 	\label{fig:negotiation}
   \end{center}
-  Figure \ref{fig:negotiation-check} shows a testing result with \texttt{RatedNegotiablePolicer3\_1}.
+  Figure \ref{fig:negotiation-check} shows a testing result with \texttt{RatedNegotiablePolicer4}. Source is a \texttt{ProbUncontrolledFlow} with maximum rate 500 pps. This flow goes through \texttt{RatedNegotiablePolicer4} with CBS = 50, EBS = 10, CIR = 100 (pps). As shown in figure \ref{fig:negotiation-check}, all packet in a window time $T = 0.5s$, the number of output packets is trimmed at 60 packets follow rules of negotiation. 
     \begin{figure}
     \centering
     \includegraphics[width=0.80\textwidth]{negotiation-check.png}

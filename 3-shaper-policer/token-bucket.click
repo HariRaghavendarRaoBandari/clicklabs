@@ -115,7 +115,7 @@ elementclass RatedTokenBucketPolicer1 {
 }
 
 elementclass RatedTokenBucketShaper1 {
-  SIZE $size, INTERVAL $interval, BURST $burst, REPEATED $repeated |
+  SIZE $size, RATE $rate, INTERVAL $interval, BURST $burst, REPEATED $repeated |
 
   policer::RatedTokenBucketPolicer1(INTERVAL $interval, 
                                     BURST $burst, 

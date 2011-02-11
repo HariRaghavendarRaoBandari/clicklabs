@@ -42,8 +42,8 @@ elementclass RatedLeakyBucketPolicer {
   //With BandwidthMeter, stream (all packets) is dropped
   //rs::BandwidthMeter($rate);
   
-  input -> s::Switch(1) -> qr::SimpleQueue(1) -> RatedUnqueue($rate) -> output;
-  s[1] -> qt::SimpleQueue(1) -> TimedUnqueue($i, 1) -> output;
+  input -> s::Switch(1) -> qr::Queue(1) -> RatedUnqueue($rate) -> output;
+  s[1] -> qt::Queue(1) -> TimedUnqueue($i, 1) -> output;
   //rs[1] -> Discard;
   qr[1] -> Discard;
   qt[1] -> Discard;

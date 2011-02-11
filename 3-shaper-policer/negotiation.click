@@ -87,7 +87,7 @@ elementclass RatedNegotiablePolicer3 {
   -> [1]output;
 }
 
-elementclass RatedNegotiablePolicer3_1 {
+elementclass RatedNegotiablePolicer4 {
   CIR $cir, CBS $cbs, EBS $ebs |
 
   InitParameters::Script(TYPE ACTIVE,
@@ -151,11 +151,13 @@ elementclass RatedNegotiablePolicer3_1 {
 }
 
 elementclass RatedNegotiablePolicer2 {
-  CEBS $cebs, INTERVAL $interval, BURST $burst | 
+  LEAKYRATE $lr, INTERVAL $interval, CIR $cir, EBS $ebs | 
   // interval = 1/rate
 
-  sp::RatedTokenBucketShaper1(SIZE $cebs, INTERVAL $interval, BURST $burst, REPEATED true);
-  input -> sp -> output;
+  input 
+  -> leaky::RatedLeakyBucketShaper(SIZE 1000, RATE $lr, INTERVAL $interval)
+  -> token::RatedTokenBucketShaper2(SIZE 1000, RATE $cir, BURST $ebs)
+  -> output
 }
 
 
