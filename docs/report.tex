@@ -19,7 +19,8 @@
 
 \renewcommand{\familydefault}{cmr}
 
-\title{Report of Click Labs}
+\title{Report of Click Labs \\
+Network management and QoS provisioning Course}
 \author{Hong-Nam Hoang, Manh-Ha Nguyen and Xuan-Thu Thi Le}
 \date{\today}
 
@@ -49,8 +50,7 @@
   \lstdefinelanguage[]{Click}[]{SQL}{
     morekeywords={elementclass, Counter, InfiniteSource, RateSource, Print, Paint, PaintSwitch, Script}}
 
-  \section{Introduction}
-  \section{ClickLabs package}
+  \section{Introduction - ClickLabs package}
     \subsection{File organization}
       \begin{description}
       	\item[elements/] This directory contains all the additional click elements using in the lab.
@@ -153,7 +153,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
       \caption{Random Queue configurations based on built-in Click elements}
       \label{fig:clickrandomqueue}
   \end{figure}
-  
+  Figure \ref{fig:test-clickrandomqueue} shows the result of testing these compound elements. The eight-byte number in each line is the timestamp of packet. We can see that this value does not increasing but randomly. 
     \begin{figure}
       \centering
       \subfloat[\texttt{BRandomQueue}]{
@@ -168,7 +168,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsubsection{Writing new element: \texttt{RandomQueue}}
   \textbf{Location:} \texttt{elements/randomqueue.*} \\
-  This element is inherited from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping the random packet and the first packet. Step by step in our algorithm as following:
+  This element is inherited from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping between the random packet and the first packet. Step by step in our algorithm as following:
   \begin{center}
 	\includegraphics[scale=0.80]{randomqueue-alg.pdf}
 	\captionof{figure}{Behavior of \texttt{RandomQueue} element}
@@ -180,6 +180,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   	\item Next, swapping the random packet and the first packet.
   	\item Last, pull out the first packet (but actually the random packet).
   \end{itemize}
+  Figure \ref{fig:test-randomqueue} shows the result of testing \texttt{RandomQueue} element. The eight-byte number in each line is the timestamp of packet. We can see that this value does not increasing but randomly. It means this element works well.
   \begin{center}
 	\includegraphics[scale=0.70]{test-randomqueue.png}
 	\captionof{figure}{Test \texttt{RandomQueue} element}
@@ -234,9 +235,9 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \begin{itemize}
   	\item Let $r_{tcp}$, $r_{udp}$, $r$ are respectively the rate of TCP source, UDP source and output link. Let $ratio$ is the ratio between number of TCP packets over number of UDP packets at output link.
   	\item Let $R = (r_{tcp} + r_{udp})$, and $m = \min(r_{tcp}, r_{udp})$.
-  	\item If $r \ge R$: $ratio = \frac{r_{tcp}}{r_{udp}}$
-  	\item If $r \le 2m$: $ratio = 1$
-  	\item If $ 2m < r < R$: $ratio = \frac{m}{r - m}$
+  	\item If $r \ge R$: $ratio \to \frac{r_{tcp}}{r_{udp}}$
+  	\item If $r \le 2m$: $ratio \to 1$
+  	\item If $ 2m < r < R$: $ratio \to \frac{m}{r - m}$
   \end{itemize}
   In general, we have a formular of ratio like: $ratio = \frac{m}{\min(R, \max(2m, r)) - m}$.
     \begin{center}
@@ -336,7 +337,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 
   \subsection{Generic Cell Rate Algorithm - GCRA}
   \textbf{Location:} \texttt{3-shaper-policer/gcra.click} \\
-  We implement this element by using \texttt{SetVirtualClock}. Each time
+  GCRA configuration is in figure \ref{fig:gcra}. We implement this element by using \texttt{SetVirtualClock}. Element \texttt{SetVirtualClock} works as following: when a packet comes to this element, it will set this packet's timestamp annotation to a new value, and also remember the last theoritical cell arrival time ($TAT$). Before letting packets approach \texttt{SetVirtualClock}, packets have to go through script \texttt{CheckTime}. If packet comes too soon, it will be dropped, otherwise it will go to \texttt{SetVirtualClock} and make a new $TAT$. We test this element by a \texttt{ProbUncontrolledFlow} with maximum rate 10 pps. Our \texttt{GCRA} is set up to allow $TAT = 0.2$ and $\tau = 0$. The result is shown in figure \ref{fig:test-gcra}. This figure represents the packet arrival time of input (lower part) and output. As we can see, output flow is less dense than input flow, and the inter-time between packets is guaranteed. 
+
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{gcra.pdf}
 	\captionof{figure}{\texttt{GCRA} configuration}
@@ -351,7 +353,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \section{Schedulers}
   \subsection{FIFO scheduler}
-  There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. 
+  \textbf{Location}: \texttt{4-scheduler/FIFO\_Sched.click}\\
+  There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. We test our FIFO scheduler with three flows and their rate respectively 1 pps, 3 pps, 6 pps. FIFO scheduler only processes 1 pps. Figure \ref{fig:test-fifo} shows the result that the high rate flow (blue color - out2) makes a greate effect on the output link.
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{fifo-dense.png}
 	\captionof{figure}{Testing \texttt{FIFOSched} configuration}
@@ -359,7 +362,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   
   \subsection{Round Robin scheduler}
-  Round Robin Scheduler is built-in element in Click. 
+  \textbf{Location}: \texttt{4-scheduler/RR\_Sched.click}\\
+  Round Robin Scheduler is built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link share fairly to all three flows (figure \ref{fig:test-rr}).
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{rr-dense.png}
 	\captionof{figure}{Testing \texttt{RRSched} configuration}
@@ -367,7 +371,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   
   \subsection{Deficit Round Robin scheduler}
-  Deficit Round Robin Scheduler is built-in element in Click. 
+  \textbf{Location}: \texttt{4-scheduler/DRR\_Sched.click}\\
+  Deficit Round Robin Scheduler is built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows.
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{drr-dense.png}
 	\captionof{figure}{Testing \texttt{DRRSched} configuration}
@@ -377,7 +382,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \subsection{Weighted Round Robin Scheduler}
   We implement this scheduler in two versions. The first is compound elements that based on Round Robin scheduler. The second is a new element.
   \subsubsection{WRR scheduler - compound element}
-  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. In practice, we need to take care of distribution of ports to have the fairness in response time.
+  \textbf{Location}: \texttt{4-scheduler/WRR\_Sched.click}\\  
+  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. In practice, we need to take care of distribution of ports to have the fairness in response time. We test WRR scheduler by using three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound}.
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{wrr2-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} compound element}
@@ -385,7 +391,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   
   \subsubsection{WRR scheduler - new element}
-  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time.
+  \textbf{Location}: \texttt{4-scheduler/WRR\_Sched\_element.click}\\  
+  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{wrr-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} element}
@@ -395,7 +402,13 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \subsection{Weighted Deficit Round Robin scheduler}
   Not implement as a new Click element but only a compound element, similar to the compound element of WRR scheduler.
   \subsection{\texttt{SetVirtualClock} element}
-  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. 
+  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. Computation of tag is: \\ 
+  \begin{align*}
+  F_{i}^{k} &= \max(F_{i}^{k-1}, V(a_{i}^{k})) + \frac{L_{i}^{k}}{r_i}\\
+  V(0) &= 0 \\
+  \frac{\partial V}{\partial \tau} &= \frac{1}{\sum r_j} \\
+  \end{align*}
+  
   \subsection{Virtual Clock scheduler}
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{test-vcsched.pdf}
