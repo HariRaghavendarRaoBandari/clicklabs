@@ -7,19 +7,19 @@ elementclass 3flows_VCSched {
   
   input[0]
   -> Paint(0)
-  -> SetVirtualClock(RATE $rate1, MAXBW 3, CURRENTBW 1)
+  -> SetVirtualClock(RATE $rate1, MAXBW 3, CURRENTBW 3)
   -> Queue
   -> [0] tss;
 
   input[1]
   -> Paint(1)
-  -> SetVirtualClock(RATE $rate2, MAXBW 3, CURRENTBW 1)
+  -> SetVirtualClock(RATE $rate2, MAXBW 3, CURRENTBW 3)
   -> Queue
   -> [1] tss;
 
   input[2]
   -> Paint(2)
-  -> SetVirtualClock(RATE $rate3, MAXBW 3, CURRENTBW 1)
+  -> SetVirtualClock(RATE $rate3, MAXBW 3, CURRENTBW 3)
   -> Queue
   -> [2] tss;
 
@@ -35,7 +35,7 @@ elementclass 3flows_VCSched {
 //-> Discard;
 
 // This code implement VC Sched based on TimeSortedSched
-vcsched::3flows_VCSched(1,1,3);
+vcsched::3flows_VCSched(1,1,1);
 
 RatedSource(RATE 1, LENGTH 1, STOP false, LIMIT 10)
 -> [0]vcsched; 
@@ -54,17 +54,17 @@ vcsched
 -> ps::PaintSwitch;
 
 ps[0]
--> ToDump(out0, SNAPLEN 1)
+-> ToDump(out01, SNAPLEN 1)
 //-> Print("flow 0", 1, TIMESTAMP true)
 -> Discard;
 
 ps[1]
--> ToDump(out1, SNAPLEN 1)
+-> ToDump(out11, SNAPLEN 1)
 //-> Print("flow 1", 1, TIMESTAMP true)
 -> Discard;
 
 ps[2]
--> ToDump(out2, SNAPLEN 1)
+-> ToDump(out21, SNAPLEN 1)
 //-> Print("flow 2", 1, TIMESTAMP true)
 -> Discard;
 
