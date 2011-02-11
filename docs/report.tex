@@ -304,33 +304,39 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\label{fig:test-token-leaky-graph}
   \end{center} 
   
-  \subsection{Cascading Leaky and Token bucket}
-  If leaky bucket is put before token bucket, the token policer donot have to take care of burstiness but only the rate of flow.
-  If token bucket is put before leaky bucket, the leaky policer will not allow burstiness from token policer or shaper if rate of leaky is smaller than the peak rate of token.  
   \subsection{Negotiation (CIR, CBS, EBS)}
   \textbf{Location:} \texttt{3-shaper-policer/negotiation.click} \\
-  Figure \ref{fig:negotiation} shows one implementation of negotiation (\texttt{RatedNegotiablePolicer4}). The idea is: packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1. \\
+  Figure \ref{fig:negotiation2} shows one implementation of negotiation (\texttt{RatedNegotiablePolicer2}). The idea is: input packets are gone through \texttt{RatedLeakyBucketShaper} (with leaky rate $R_L = \frac{CIR * (CBS + EBS)}{CBS}$) and then gone through \texttt{RatedTokenBucketShaper2} (with token rate $R_T = CIR$ and burst duration is $EBS$). At output, we guarantee that in interval time $T = \frac{CBS}{CIR}$, maximum number of output packets is $(CBS + EBS)$ and flow is shapped to rate $CIR$ with a maximum burst duration $EBS$.   
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{negotiation2.pdf}
+	\captionof{figure}{Implementation of \texttt{RatedNegotiablePolicer2}}
+	\label{fig:negotiation2}
+  \end{center}  
   We brieftly describe other implementations of negotiation which can be found in \texttt{negotiation.click} as following:
   \begin{itemize}
-  	\item \texttt{RatedNegotiablePolicer1}: input packets are stored in a queue with length $(CBS + EBS)$. At each interval $T = \frac{CBS}{CIR}$, all packets in queue are released. This implementation is simple with only one \texttt{TimedUnqueue} to control $T$, one Queue to do negotiation. To recognize high and low priority, at each packet, before storing it in queue, we check if queue length is larger than $CBS$ then its priority is low. However, this element is a non-work-conserving element, so we only consider it when $T$ is small (should be $T \le 1$, or the best case is $CBS = 1$).
-  	\item \texttt{RatedNegotiablePolicer2}: input packets are gone through \texttt{RatedLeakyBucketShaper} (with leaky rate $R_L = \frac{CIR * (CBS + EBS)}{CBS}$) and then gone through \texttt{RatedTokenBucketShaper2} (with token rate $R_L = CIR$ and burst duration is $EBS$). At output, we gurantee that in interval time $T = \frac{CBS}{CIR}$, maximum number of output packet is $(CBS + EBS)$ and flow is shapped to rate $CIR$ with a maximum burst duration $EBS$. 
+  	\item \texttt{RatedNegotiablePolicer1}: Input packets are stored in a queue with length $(CBS + EBS)$. At each interval $T = \frac{CBS}{CIR}$, all packets in queue are released. This implementation is simple with only one \texttt{TimedUnqueue} to control $T$, one Queue to do negotiation. To recognize high and low priority, at each packet, before storing it in queue, we check if queue length is larger than $CBS$ then its priority is low. However, this element is a non-work-conserving element, so we only consider it when $T$ is small (should be $T \le 1$, or the best case is $CBS = 1$).
+  	\item \texttt{RatedNegotiablePolicer4}: See figure \ref{fig:negotiation4}. Input packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1. 
   \end{itemize}
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{negotiation.png}
-	\captionof{figure}{One implementation of negotiating CIR, CBS, EBS}
-	\label{fig:negotiation}
+	\captionof{figure}{Implementation of \texttt{RatedNegotiablePolicer4}}
+	\label{fig:negotiation4}
   \end{center}
-  Figure \ref{fig:negotiation-check} shows a testing result with \texttt{RatedNegotiablePolicer4}. Source is a \texttt{ProbUncontrolledFlow} with maximum rate 500 pps. This flow goes through \texttt{RatedNegotiablePolicer4} with CBS = 50, EBS = 10, CIR = 100 (pps). As shown in figure \ref{fig:negotiation-check}, all packet in a window time $T = 0.5s$, the number of output packets is trimmed at 60 packets follow rules of negotiation. 
+  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-check}. The red line (\texttt{dumpin2}) is presentation of input flow. The green line (\texttt{dumpout2}) is presented \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4}. to We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets follow rules of negotiation. 
     \begin{figure}
     \centering
-    \includegraphics[width=0.80\textwidth]{negotiation-check.png}
-	  \captionof{figure}{Number of packets in a time $CBS/CIR$}
-	  \label{fig:negotiation-check}
+    \subfloat[Number of packets in a time interval $CBS/CIR$]{
+      \includegraphics[width=0.55\textwidth]{negotiation-check.png}
+	    \label{fig:negotiation-check}}
+    \subfloat[Number of packets over time]{
+      \includegraphics[width=0.55\textwidth]{negotiation-count.png}
+	    \label{fig:negotiation-count}}
+	    \caption{Negotiation with \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4}}
     \end{figure}
 
   \subsection{Generic Cell Rate Algorithm - GCRA}
   \textbf{Location:} \texttt{3-shaper-policer/gcra.click} \\
-  
+  We implement this element by using \texttt{SetVirtualClock}. Each time
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{gcra.pdf}
 	\captionof{figure}{\texttt{GCRA} configuration}

@@ -151,11 +151,11 @@ elementclass RatedNegotiablePolicer4 {
 }
 
 elementclass RatedNegotiablePolicer2 {
-  LEAKYRATE $lr, INTERVAL $interval, CIR $cir, EBS $ebs | 
+  LEAKYRATE $lr, INTERVAL $interval, CIR $cir, EBS $ebs, CEBS $cebs | 
   // interval = 1/rate
 
   input 
-  -> leaky::RatedLeakyBucketShaper(SIZE 1000, RATE $lr, INTERVAL $interval)
+  -> leaky::RatedLeakyBucketShaper(SIZE $cebs, RATE $lr, INTERVAL $interval)
   -> token::RatedTokenBucketShaper2(SIZE 1000, RATE $cir, BURST $ebs)
   -> output
 }

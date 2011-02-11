@@ -136,10 +136,9 @@ echo "$((CBS+EBS)) $ENDTIME" >> ./EBS_line
 
 draw-graph.sh \
         $DATAOPT \
-        --data ./CIR_line \
-        --data ./CBS_line \
-        --data ./EBS_line \
         --plot-type "COUNT" \
         --xrange $XRANGE \
         -o $OUTPUT \
+        --xlabel "time" \
+        --ylabel "packets" \
         --title "Conformant_verification" 
