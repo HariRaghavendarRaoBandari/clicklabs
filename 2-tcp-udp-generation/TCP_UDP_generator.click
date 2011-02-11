@@ -36,13 +36,13 @@ elementclass TCP_UDP_generator {
     -> output
 }
 
-TCP_UDP_generator(TCP 1000, UDP 1)
+TCP_UDP_generator(TCP 500, UDP 200)
   //-> scale::Script (TYPE PACKET, div $(tcp_counter.count) $(udp_counter.count) )
   -> cp::CheckPaint (16);
 
 cp[0]
   -> tcp_counter::Counter
-  -> TimedSink (0.001);
+  -> TimedSink (0.0016);
 
 cp[1]
   -> udp_counter::Counter

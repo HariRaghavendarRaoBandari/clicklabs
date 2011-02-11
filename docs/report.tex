@@ -24,8 +24,8 @@
 \date{\today}
 
 \begin{document}
-
   \maketitle
+  \tableofcontents
 
   \definecolor{stringcolor}{rgb}{0.20,0.50,0.20}
   \definecolor{commentcolor}{rgb}{0.40,0.40,0.40}
@@ -69,7 +69,7 @@
       	\item[4-scheduler/]
       \end{description}
     
-    \subsection{Some introductions before surfing click configurations}
+    \subsection{Some introductions before surfing Click configurations}
       \begin{enumerate}
       	\item 
       	  First of all, initialize the click environment for these stuffs. Run file init.sh: \\
@@ -110,6 +110,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \section{Test configuration}
   In the first time of using Click, we try to implement \texttt{Counter\_test} element, \texttt{Random\_IP\_generator} element using basic Click elements, such as \texttt{Print, InfiniteSource, RatedSource, Script}, also trying to modify a part of source code of \texttt{InfiniteSource} to generate packets that randomize byte value at a specific location in payload.
   \subsection{\texttt{Counter\_test} Click configuration}
+  \textbf{Location:} \texttt{1-test-config/Counter\_test.click} \\
   \begin{center}
 	  \includegraphics[scale=0.6]{counter_test.pdf}
 	  \captionof{figure}{\texttt{Counter\_test} Click configuration}
@@ -117,6 +118,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   To avoid IP CRC checking, we temporarily disable CRC checking by using flag "\texttt{CHECKSUM false}" in \texttt{CheckIPHeader} element. Another solution is to use \texttt{SetIPChecksum} to repair CRC in generated IP packets. Since we can visualize the result by using \texttt{clicky} to replace steps that print out screen counting results from \texttt{Counter} elements. 
   \subsection{\texttt{RandInfiniteSource} element}
+  \textbf{Location:} \texttt{elements/randinfinitesource.*} \\
   This element is implemented by modifying source of \texttt{InfiniteSource} element. Its function is similar to \texttt{InfiniteSource}, but by adding one more keyword (\texttt{RNDBYTEID}), generated packets may have random byte value at a specified position in payload. The idea of implementation is that before pushing out packets to the output port, packet payload is changed. Originally, data packet is already prepared one time by \texttt{setup\_packet} function before \texttt{InfiniteSource} releases packets. To make new element work, after modifying data, \texttt{setup\_packet} function should be called, otherwise generated packets do not change their content. Figure \ref{fig:test-randsource} shows the result of using \texttt{RandInfiniteSource} element to generate five packets with random value at the first byte.
   \begin{center}
 	\includegraphics[width=0.9\textwidth]{test-randinfinitesource.png}
@@ -132,6 +134,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{itemize}
   To test our element, we first generate a high rate packet at input, store current timestamps, let packet go through our elements to output which has lower rate than the input. We then print out packet timestamps to see whether they are random or not.
   \subsubsection{Using built-in Click elements (compound element)}
+  \textbf{Location:} \texttt{1-test-config/randomqueue.click} \\
   We have implemented two versions:
   \begin{itemize}
   	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasing timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
@@ -164,7 +167,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{figure}
   
   \subsubsection{Writing new element: \texttt{RandomQueue}}
-  This element inherit from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping the random packet and the first packet. Step by step in our algorithm as following:
+  \textbf{Location:} \texttt{elements/randomqueue.*} \\
+  This element is inherited from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping the random packet and the first packet. Step by step in our algorithm as following:
   \begin{center}
 	\includegraphics[scale=0.80]{randomqueue-alg.pdf}
 	\captionof{figure}{Behavior of \texttt{RandomQueue} element}
@@ -183,6 +187,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
 
   \subsection{\texttt{Random\_IP\_generator} configuration}
+  \textbf{Location:} \texttt{1-test-config/Random\_IP\_generator.click} \\
   We combine \texttt{RandInfiniteSource, RandomQueue} with other elements to build this configuration:
   \begin{itemize}
    	\item \texttt{RandInfiniteSource}: generate packets with random source IP address in the form 192.168.1.x. In this situation, we set up "RNDBYTEID 30".
@@ -203,6 +208,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   \section{TCP/UDP traffic generation}
   \subsection{TCP traffic}
+  \textbf{Location:} \texttt{2-tcp-udp-generation/TCP\_Source.click} \\
   The procedure of generating TCP packet as following:
   \begin{itemize}
   	\item First, we use \texttt{TimedSource} to generate TCP packet without IP header.
@@ -215,35 +221,57 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	  \label{fig:tcpsource}
   \end{center}
   \subsection{UDP traffic}
-    \texttt{UDP\_Generator} operates like \texttt{TCP\_Generator}. Note: when using \texttt{IPEncap}, setup "PROTO 0x11" for UDP packet.
+  \textbf{Location:} \texttt{2-tcp-udp-generation/UDP\_Source.click} \\
+  \texttt{UDP\_Generator} operates like \texttt{TCP\_Generator}. Note: when using \texttt{IPEncap}, setup "PROTO 0x11" for UDP packet.
     \begin{center}
 	  \includegraphics[scale=0.55]{UDP_Source.pdf}
 	  \captionof{figure}{\texttt{UDP\_Source} element}
 	  \label{fig:udpsource}
   \end{center}
   \subsection{\texttt{TCP\_UDP\_generator} configuration}
-  We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when queues are not full. When queues are full, the ratio approaches 1.
+  \textbf{Location:} \texttt{2-tcp-udp-generation/TCP\_UDP\_generator.click} \\
+  We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when both queues are not full or speed of output link (\texttt{TimedSink}) is very fast. When queues are full, the expected ratio is not guaranteed. At our observation, we try to formalize the ratio as following:
+  \begin{itemize}
+  	\item Let $r_{tcp}$, $r_{udp}$, $r$ are respectively the rate of TCP source, UDP source and output link. Let $ratio$ is the ratio between number of TCP packets over number of UDP packets at output link.
+  	\item Let $R = (r_{tcp} + r_{udp})$, and $m = \min(r_{tcp}, r_{udp})$.
+  	\item If $r \ge R$: $ratio = \frac{r_{tcp}}{r_{udp}}$
+  	\item If $r \le 2m$: $ratio = 1$
+  	\item If $ 2m < r < R$: $ratio = \frac{m}{r - m}$
+  \end{itemize}
+  In general, we have a formular of ratio like: $ratio = \frac{m}{\min(R, \max(2m, r)) - m}$.
     \begin{center}
 	  \includegraphics[scale=0.4]{TCP_UDP_generator.pdf}
-	  \captionof{figure}{\texttt{TCP\_UDP\_generator} element}
+	  \captionof{figure}{\texttt{TCP\_UDP\_generator} configuration}
 	  \label{fig:tcpudp}
   \end{center}
   \section{Shapers and Policers}
+  In this part, we implement elements with consideration at packet level, not byte level.
   \subsection{Uncontrolled flow}
+  \textbf{Location:} \texttt{3-shaper-policer/uncontrol-flow.click} \\
   We have tried some implementations of uncontrolled flow but the main idea is that the inter-time (interval) between two consecutive packets is a random
-  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. Figure \ref{fig:probuncontrolledflow} shows the configuration of \texttt{ProbUncontrolledFlow} that each time one packet go out (to output), script \texttt{ScriptChangeRate} decides whether packet rate is changed or not with specified probability $p$.
+  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. We list here with a few lines of description of each implementation:
+  \begin{itemize}
+  	\item \texttt{UncontrolledFlow0}: We use two rated sources, one for generating regular rated source, one for generating burst. These sources are connected to a pull switch to choose from which source packets are generated. At any time generating packets, we choose a source to generate next packets through a script. 
+  	\item \texttt{UncontrolledFlow1}: Only one source (\textt{InfiniteSource}) is used and connected directly to the output. We used another two scripts named \texttt{change\_rate} and \texttt{autoupdate\_change\_burst} to change rate and burst at runtime.
+  	\item \texttt{SimpleUncontrolledFlow}: we use \texttt{RatedSource} instead of \textt{InfiniteSource} and one script to change the rate of source each one second. Script operates in type ACTIVE.
+  	\item \texttt{ProbUncontrolledFlow} (Figure \ref{fig:probuncontrolledflow}): similar to \texttt{SimpleUncontrolledFlow} but change-rate script operates in type PACKET. When one packet go through this script, it will decide whether rate of source is changed or not based on a probability defined by user.
+  	\item \texttt{BurstUncontrolledFlow}: We use eight sources (\texttt{RatedSource}), all connected to a \texttt{ThreadSafeQueue}. At each source, packets can be dropped at a defined probability. As a result, this compound element generates packets at a particular rate but random burst (maximum burst size is 8). 
+  \end{itemize}
   \begin{center}
 	\includegraphics[width=0.60\textwidth]{probuncontrolledflow.pdf}
 	\captionof{figure}{Uncontrolled flow with probability of changing rate source.}
 	\label{fig:probuncontrolledflow}
   \end{center}
+  
   \subsection{Leaky bucket}
+  \textbf{Location:} \texttt{3-shaper-policer/leaky-bucket.click} \\
+  Since leaky bucket does not admit any burtiness, we design the leaky bucket policer with a queue of size 1 (maximum 1 packet in a queue at a time) (figure \ref{fig:test-leaky}). After that, we use \texttt{RatedUnqueue} or \texttt{TimedSource} to create CBR source. We use both these elements because of a technical issue: when the rate is less than 1000 packets/second, \texttt{RatedUnqueue} can release packets from queue with burstiness. So, at the beginning of starting leaky policer, the \texttt{Init} script will decide which one of unqueue elements is used.
   \begin{center}
 	\includegraphics[width=1.0\textwidth]{leaky-shaper.pdf}
-	\captionof{figure}{Leaky bucket with flow \texttt{ProbUncontrolledFlow}}
+	\captionof{figure}{Leaky bucket configuration (policer and shaper)}
 	\label{fig:test-leaky}
   \end{center}
-  
+  Scenario of testing leaky bucket: \texttt{ProbUncontrolledFlow} is the source of packets with maximum rate 1000 pps (packets per second). The leaky policer only allows 400 pps. Shaper of leaky bucket uses a buffer of 2000 packets and generate packets from buffer at rate 400pps to the leaky policer. Figure \ref{fig:test-leakypolicer-graph} shows that the number of output packets is linear to time although the input is not.  
   \begin{center}
 	\includegraphics[width=0.8\textwidth]{leaky-count.png}
 	\captionof{figure}{Monitor number of packets at input (uncontrolled flow) and output of leaky policer and shaper}
@@ -251,6 +279,12 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center} 
   
   \subsection{Token bucket}
+  \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
+  Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burstiness, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
+  \begin{itemize}
+  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decrease one. 
+  	\item \texttt{RatedTokenBucketPolicer2}: This element use a sample source (same rate as token bucket, operating as a token generator) and two counter to count the number of output packets ($CI$) and the number of generated token packets ($CT$). This element guarantees that: $CI \le CT \le CI + burst$. If this condition is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (there is no queue to store input packets) while other implementations try to store input packets first and then regulate the output flow at a specific rate.
+  \end{itemize} 
   \begin{center}
 	\includegraphics[width=1.0\textwidth]{token-shaper.pdf}
 	\captionof{figure}{Token bucket configuration \texttt{RatedTokenBucketShaper3}}
@@ -263,27 +297,35 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\label{fig:test-tokenpolicer-graph}
   \end{center} 
 
+  Figure \ref{fig:test-token-leaky-graph} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{BurstUncontrolledFlow}  (rate is 1 pps and maximum burst is 8) by a token and a leaky bucket policer. Token bucket policer is \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10), and leaky policer is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). We see that token policer can allow some burstiness but leaky policer limits the burstiness.
   \begin{center}
 	\includegraphics[width=0.8\textwidth]{compare-lk-tk.png}
 	\captionof{figure}{Comparision of Token bucket and Leaky bucket}
-	\label{fig:test-tokenpolicer-graph}
+	\label{fig:test-token-leaky-graph}
   \end{center} 
   
   \subsection{Cascading Leaky and Token bucket}
+  If leaky bucket is put before token bucket, the token policer donot have to take care of burstiness but only the rate of flow.
+  If token bucket is put before leaky bucket, the leaky policer will not allow burstiness from token policer or shaper if rate of leaky is smaller than the peak rate of token.  
   \subsection{Negotiation (CIR, CBS, EBS)}
+  \textbf{Location:} \texttt{3-shaper-policer/negotiation.click} \\
+  Figure \ref{fig:negotiation} shows one implementation of negotiation. The idea is: packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1.
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{negotiation.png}
 	\captionof{figure}{One implementation of negotiating CIR, CBS, EBS}
 	\label{fig:negotiation}
   \end{center}
-    
+  Figure \ref{fig:negotiation-check} shows a testing result with \texttt{RatedNegotiablePolicer3\_1}.
     \begin{figure}
     \centering
     \includegraphics[width=0.80\textwidth]{negotiation-check.png}
 	  \captionof{figure}{Number of packets in a time $CBS/CIR$}
 	  \label{fig:negotiation-check}
     \end{figure}
-  \subsection{Generic Cell Rate Algorithm - GCRA}  
+
+  \subsection{Generic Cell Rate Algorithm - GCRA}
+  \textbf{Location:} \texttt{3-shaper-policer/gcra.click} \\
+  
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{gcra.pdf}
 	\captionof{figure}{\texttt{GCRA} configuration}
