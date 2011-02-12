@@ -54,39 +54,42 @@ Network management and QoS provisioning Course}
   \section{Introduction - ClickLabs package}
     \subsection{File organization}
       \begin{description}
-      	\item[elements/] This directory contains all the additional click elements using in the lab.
-      	\item[plot-template/] This directory contains templates used for plotting data by gnuplot. These files are used by draw-graph.sh
-      	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory elements (above). For more information, type: ./update-elements.sh -h
-      	\item[bin/visual-clicky.sh]Shell script to visualize click experiment using clicky. For more information, type: ./visual-clicky.sh -h
-      	\item[bin/init.sh]Initialize Click environment for lab. Just run init.sh in the first time you get this source or click source directory changed.
-      	\item[bin/eclick-compile.sh] Extend the Click file. A click file can include another one to reuse some compound elements (similar include in C, or import in Java). File eclick-compile.sh is used to translate (or flatten) these extended-click file to a normal click file.
-      	\item[bin/convert-click-dump.sh]This script used to transform dump files from click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
-      	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in CLICK dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use convert-click-dump.sh before using draw-graph.sh.
+      	\item[elements/] This directory contains all the additional Click elements using in the lab.
+      	\item[plot-template/] This directory contains templates used for plotting data by \texttt{gnuplot}. These files are used by \texttt{draw-graph.sh}
+      	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory elements (above). For more information, type: \\
+      	\texttt{./update-elements.sh -h}
+      	\item[bin/visual-clicky.sh]Shell script to visualize click experiment using \texttt{clicky}. For more information, type: \\ 
+      	\texttt{./visual-clicky.sh -h}
+      	\item[bin/init.sh]Initialize Click environment for lab. Just run \texttt{init.sh} in the first time you get this source or Click source directory changed.
+      	\item[bin/eclick-compile.sh] Extend the Click file. A Click file can include another one to reuse some compound elements (similar include in C, or import in Java). File \texttt{eclick-compile.sh} is used to translate (or flatten) these extended-Click file to a normal Click file.
+      	\item[bin/convert-click-dump.sh]This script used to transform dump files from Click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
+      	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in Click dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use \texttt{convert-click-dump.sh} before using \texttt{draw-graph.sh}.
       	\item[bin/draw-graph-framerelay.sh] Based on draw-graph.sh, this script helps to show the characteristics of verifying a conformance flow (which is deal with CIR, CBS, EBS).
-      	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a Clicky diagram with style sheets written in a CSS-like language.      	
-      	\item[1-test-config/]
-      	\item[2-tcp-udp-generation/]
-      	\item[3-shaper-policer/]
-      	\item[4-scheduler/]
+      	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a clicky diagram with style sheets written in a CSS-like language.      	
+      	\item[1-test-config/] Click configuration for the first part of Click Lab.
+      	\item[2-tcp-udp-generation/] Click configurations for the part of TCP/UDP generator.
+      	\item[3-shaper-policer/] Click configurations for the part of Shaper and Policer.
+      	\item[4-scheduler/] Click configurations for the last part of Scheduler.
+      	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED).
       \end{description}
     
     \subsection{Some introductions before surfing Click configurations}
       \begin{enumerate}
       	\item 
-      	  First of all, initialize the click environment for these stuffs. Run file init.sh: \\
+      	  First of all, initialize the Click environment for these stuffs. Run file \texttt{init.sh}: \\
       	    \texttt{chmod +x init.sh\\
       	    ./init.sh}\\
-      	  Normally, init process takes long time for the first finding Click source path. To save time, you can create file \texttt{\~/.clickrc} with the content similar to this:\\
+      	  Normally, this process takes long time for the first finding Click source path. To save time, you can create file \texttt{\~/.clickrc} with the content similar to this:\\
             \texttt{export CLICK\_SRC=/home/iizke/click/click-1.8.0}
         
         \item 
           While finishing to code some Click elements, put it in directory \texttt{elements}, and then run file \texttt{update-elements.sh} to compile and install new elements: \\
     \texttt{update-elements.sh}
         \item
-        Explore the click configuration by using tool \texttt{visual-clicky.sh}. Simple way to use: \\    
+        Explore the Click configuration by using tool \texttt{visual-clicky.sh}. Simple way to use: \\    
     \texttt{visual-clicky.sh \$CLICK\_CONFIGURATION\_FILE}
         \item
-        To support easy-reading and team-working activities, we developed a tool to allow including some click files into a click file. If you write some Click files as "\textit{library}" files, you can reuse it by using \textit{include statements}. For example, we have \texttt{TCP\_Source.click} to implement a TCP-generator, and \texttt{UDP\_Source.click} to implement an UDP-generator. In \texttt{TCP\_UDP.click}, we reuse the implementation of these generator by adding these lines at anywhere in \texttt{TCP\_UDP.click} file (but should be on the top for easy reading): \\
+        To support easy-reading and team-working activities, we developed a tool to allow including some Click files into one Click file. If you write some Click files as "\textit{library}" files, you can reuse it by using \textit{include statements}. For example, we have \texttt{TCP\_Source.click} to implement a TCP-generator, and \texttt{UDP\_Source.click} to implement an UDP-generator. In \texttt{TCP\_UDP.click}, we reuse the implementation of these generator by adding these lines at anywhere in \texttt{TCP\_UDP.click} file (but should be on the top for easy reading): \\
         \texttt{
   ------------------------ file: TCP\_UDP.click ---------------------------\\
   //#include "TCP\_Source.click"\\
@@ -97,7 +100,7 @@ Network management and QoS provisioning Course}
           \texttt{//\#include "CLICK\_FILE\_PATH"}\\
   where \texttt{CLICK\_FILE\_PATH} can be relative or absolute path. After that, you have to use our tool (\texttt{eclick-compile.sh}) to pre-compile this file before simulating it by Click, for example:\\
     \texttt{eclick-compile.sh -o extend-TCP\_UDP.click [-f] TCP\_UDP.click}\\
-Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the extended-click file. It will do all automatically.
+Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the extended-Click file. It will do all automatically.
         \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. Normally, we usually generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is to run this command:\\
 \texttt{draw-graph.sh -f dataIn.dump -f dataOut.dump \\
       $[$-o PNG\_FILES$]$\\
@@ -138,7 +141,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location:} \texttt{1-test-config/randomqueue.click} \\
   We have implemented two versions:
   \begin{itemize}
-  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasing timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
+  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasingly timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
   	\item \texttt{2PRandomQueue} (Two Partition Random Queue): We expand the above idea with two queues and using Stride scheduler to join them to the output. Note that, dropped packets in the first queue are push to the second queue.
   \end{itemize}
   \begin{figure}[ht]
@@ -198,9 +201,9 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
    	\item \texttt{RandomBitError}: to simulate an error free link via a queue element.
    	\item \texttt{Script}: we add some scripts to check states: 
        	\begin{itemize}
-       		\item \texttt{autoupdate\_lostp\_estimation}: calculation based on bit error from \texttt{RandomBitError} and number of 'input' packets (\texttt{c1} in figure \ref{fig:randomipgenerator}).
-       		\item \texttt{autoupdate\_real\_bit\_error}: based on \texttt{c1, c2}. 
-       		\item \texttt{autoupdate\_lostp\_percent}: based on \texttt{c1, c2}.
+       		\item \texttt{autoupdate\_lostp\_estimation}: calculation of expected lost packets over input packets, based on bit error from \texttt{RandomBitError} and number of 'input' packets (\texttt{c1} in figure \ref{fig:randomipgenerator}).
+       		\item \texttt{autoupdate\_real\_bit\_error}: real bit error cbased on \texttt{c1, c2}. 
+       		\item \texttt{autoupdate\_lostp\_percent}: real lost packets over input packets based on \texttt{c1, c2}.
        	\end{itemize}
    \end{itemize} 
   \begin{center}
@@ -232,7 +235,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   \subsection{\texttt{TCP\_UDP\_generator} configuration}
   \textbf{Location:} \texttt{2-tcp-udp-generation/TCP\_UDP\_generator.click} \\
-  We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when both queues are not full or speed of output link (\texttt{TimedSink}) is very fast. When queues are full, the expected ratio is not guaranteed. At our observation, we try to formalize the ratio as following:
+  We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Both sources are connected to a Round Robin scheduler (\texttt{rrsched}). Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when both queues are not full or speed of output link (\texttt{TimedSink}) is very fast. When queues are full, the expected ratio is not guaranteed. At our observation, we try to formalize the ratio as following:
   \begin{itemize}
   	\item Let $r_{tcp}$, $r_{udp}$, $r$ are respectively the rate of TCP source, UDP source and output link. Let $ratio$ is the ratio between number of TCP packets over number of UDP packets at output link.
   	\item Let $R = (r_{tcp} + r_{udp})$, and $m = \min(r_{tcp}, r_{udp})$.
@@ -254,10 +257,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. We list here with a few lines of description of each implementation:
   \begin{itemize}
   	\item \texttt{UncontrolledFlow0}: We use two rated sources, one for generating regular rated source, one for generating burst. These sources are connected to a pull switch to choose from which source packets are generated. At any time generating packets, we choose a source to generate next packets through a script. 
-  	\item \texttt{UncontrolledFlow1}: Only one source (\textt{InfiniteSource}) is used and connected directly to the output. We used another two scripts named \texttt{change\_rate} and \texttt{autoupdate\_change\_burst} to change rate and burst at runtime.
-  	\item \texttt{SimpleUncontrolledFlow}: we use \texttt{RatedSource} instead of \textt{InfiniteSource} and one script to change the rate of source each one second. Script operates in type ACTIVE.
+  	\item \texttt{UncontrolledFlow1}: Only one source (\texttt{InfiniteSource}) is used and connected directly to the output. We used another two scripts named \texttt{change\_rate} and \texttt{autoupdate\_change\_burst} to change rate and burst duration at runtime.
+  	\item \texttt{SimpleUncontrolledFlow}: we use \texttt{RatedSource} instead of \texttt{InfiniteSource} and one script to change the rate of source. This script operates in type ACTIVE and period of one second.
   	\item \texttt{ProbUncontrolledFlow} (Figure \ref{fig:probuncontrolledflow}): similar to \texttt{SimpleUncontrolledFlow} but change-rate script operates in type PACKET. When one packet go through this script, it will decide whether rate of source is changed or not based on a probability defined by user.
-  	\item \texttt{BurstUncontrolledFlow}: We use eight sources (\texttt{RatedSource}), all connected to a \texttt{ThreadSafeQueue}. At each source, packets can be dropped at a defined probability. As a result, this compound element generates packets at a particular rate but random burst (maximum burst size is 8). 
+  	\item \texttt{BurstUncontrolledFlow}: We use eight sources (\texttt{RatedSource}) generating packets in the same rate, all connected to a \texttt{ThreadSafeQueue}. In each source, packets can be dropped at a defined probability. As a result, this compound element generates packets at a particular rate but random burst duration (maximum is 8). 
   \end{itemize}
   \begin{center}
 	\includegraphics[width=0.60\textwidth]{probuncontrolledflow.pdf}
@@ -267,7 +270,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{Leaky bucket}
   \textbf{Location:} \texttt{3-shaper-policer/leaky-bucket.click} \\
-  Since leaky bucket does not admit any burtiness, we design the leaky bucket policer with a queue of size 1 (maximum 1 packet in a queue at a time) (figure \ref{fig:test-leaky}). After that, we use \texttt{RatedUnqueue} or \texttt{TimedSource} to create CBR source. We use both these elements because of a technical issue: when the rate is less than 1000 packets/second, \texttt{RatedUnqueue} can release packets from queue with burstiness. So, at the beginning of starting leaky policer, the \texttt{Init} script will decide which one of unqueue elements is used.
+  Since leaky bucket does not admit any burtiness, we design the leaky bucket policer with a queue of size one (maximum one packet in a queue at a time) (figure \ref{fig:test-leaky}). After that, we use \texttt{RatedUnqueue} or \texttt{TimedSource} to create CBR source. We use both these elements because of a technical issue: when the rate is less than 1000 packets/second, \texttt{RatedUnqueue} can release packets from queue with burstiness. So, at the beginning of starting leaky policer, the \texttt{Init} script will decide which one of unqueue elements is used.
   \begin{center}
 	\includegraphics[width=1.0\textwidth]{leaky-shaper.pdf}
 	\captionof{figure}{Leaky bucket configuration (policer and shaper)}
@@ -284,8 +287,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
   Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
   \begin{itemize}
-  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decrease one. To allow repeat burst at any interval time, this element uses flag REPEATED.
-  	\item \texttt{RatedTokenBucketPolicer2}: This element use a sample source (same rate as token bucket, operating as a token generator) and two counter to count the number of output packets ($CI$) and the number of generated token packets ($CT$). This element guarantees that: $CI \le CT \le CI + burst$. If this condition is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (there is no queue to store input packets) while other implementations try to store input packets first and then regulate the output flow at a specific rate.
+  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decreased one. To allow repeating burst at any interval time, this element uses flag REPEATED.
+  	\item \texttt{RatedTokenBucketPolicer2}: This element uses a sample source (same rate as token bucket, operating as a token generator) and two counters to count the number of output packets ($CI$) and the number of generated token packets ($CT$). This element guarantees this condition: \\ 
+  	\begin{align*}CI \le CT \le CI + burst \end{align*}
+  	If it is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (there is no queue to store input packets) while other implementations try to store input packets first and then regulate the output flow at a specific rate.
   \end{itemize} 
   \begin{center}
 	\includegraphics[width=1.0\textwidth]{token-shaper.pdf}
@@ -295,7 +300,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \begin{center}
 	\includegraphics[width=0.8\textwidth]{token-count.png}
-	\captionof{figure}{Monitor number of packets at input (uncontrolled flow) and output of token policer and shaper}
+	\captionof{figure}{Number of packets at input (uncontrolled flow) and output of token policer and shaper}
 	\label{fig:test-tokenpolicer-graph}
   \end{center} 
 
@@ -317,14 +322,14 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   We brieftly describe other implementations of negotiation which can be found in \texttt{negotiation.click} as following:
   \begin{itemize}
   	\item \texttt{RatedNegotiablePolicer1}: Input packets are stored in a queue with length $(CBS + EBS)$. At each interval $T = \frac{CBS}{CIR}$, all packets in queue are released. This implementation is simple with only one \texttt{TimedUnqueue} to control $T$, one Queue to do negotiation. To recognize high and low priority, at each packet, before storing it in queue, we check if queue length is larger than $CBS$ then its priority is low. However, this element is a non-work-conserving element, so we only consider it when $T$ is small (should be $T \le 1$, or the best case is $CBS = 1$).
-  	\item \texttt{RatedNegotiablePolicer4}: See figure \ref{fig:negotiation4}. Input packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CIR$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time base on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, we use \texttt{SampleSource} generating packets at rate $CIR$ and \texttt{PrioScheduler} to guarantee that condition. At output, there are only $(CBS+EBS)$ packets in a window time $T$. The high priority packets are on port 0, and the low priority packets are on port 1. 
+  	\item \texttt{RatedNegotiablePolicer4}: See figure \ref{fig:negotiation4}. Input packets are classified into low and high priority. Packet is high priority and put into \texttt{HighQueue} if there is free space in \texttt{HighQueue} (capacity $CBS$), otherwise it is in \texttt{LowQueue} (capacity $EBS$) with low priority. Since rate $CIR$ is fixed, the window time $T = \frac{CBS}{CIR}$ is scale to $CBS$. We use a counter \texttt{TimeCount} to know when the window time is end (by observing $\texttt{TimeCount} = CBS$). If this happens, we reset all the counters for a new window time. Since we calculate the window time based on $CBS$, we have to make sure that there are always packets to \texttt{TimeCount} at rate $CIR$. So, \texttt{SampleSource} is used to generate packets at rate $CIR$ to guarantee that condition. Whenever there are no packets from \texttt{HighQueue}, the \texttt{PrioScheduler} will get packets from \texttt{SampleSource}. In the end, temporary packets will be removed before going to the output. The number of packets in a window time $T$ always less than or equal to $(CBS+EBS)$. The high priority packets are on port 0, and the low priority packets are on port 1. 
   \end{itemize}
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{negotiation.png}
 	\captionof{figure}{Implementation of \texttt{RatedNegotiablePolicer4}}
 	\label{fig:negotiation4}
   \end{center}
-  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-check}. The red line (\texttt{dumpin2}) is presentation of input flow. The green line (\texttt{dumpout2}) is presented \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4}. to We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets follow rules of negotiation. 
+  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-test}. The red line (\texttt{dumpin2}) is presentation of input flow. The green line (\texttt{dumpout2}) is presented \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4}. to We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets follow rules of negotiation. 
     \begin{figure}
     \centering
     \subfloat[Number of packets in a time interval $CBS/CIR$]{
@@ -333,7 +338,9 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
     \subfloat[Number of packets over time]{
       \includegraphics[width=0.55\textwidth]{negotiation-count.png}
 	    \label{fig:negotiation-count}}
+	    
 	    \caption{Negotiation with \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4}}
+	    \label{fig:negotiation-test}
     \end{figure}
 
   \subsection{Generic Cell Rate Algorithm - GCRA}
@@ -355,38 +362,44 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \section{Schedulers}
   \subsection{FIFO scheduler}
   \textbf{Location}: \texttt{4-scheduler/FIFO\_Sched.click}\\
-  There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. We test our FIFO scheduler with three flows and their rate respectively 1 pps, 3 pps, 6 pps. FIFO scheduler only processes 1 pps. Figure \ref{fig:test-fifo} shows the result that the high rate flow (blue color - out2) makes a greate effect on the output link.
+  There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. We test our FIFO scheduler with three flows and their rate respectively 1 pps, 3 pps, 6 pps. FIFO scheduler only processes 1 pps. Figure \ref{fig:test-fifo} shows the result that the high rate flow (blue color - out2) makes a huge effect on the output link.
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{fifo-dense.png}
+	\includegraphics[width=0.70\textwidth]{fifo-dense.png}
 	\captionof{figure}{Testing \texttt{FIFOSched} configuration}
 	\label{fig:test-fifo}
   \end{center}
   
   \subsection{Round Robin scheduler}
   \textbf{Location}: \texttt{4-scheduler/RR\_Sched.click}\\
-  Round Robin Scheduler is built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link share fairly to all three flows (figure \ref{fig:test-rr}).
+  Round Robin Scheduler is a built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link is shared fairly to all three flows (figure \ref{fig:test-rr}).
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{rr-dense.png}
+	\includegraphics[width=0.70\textwidth]{rr-dense.png}
 	\captionof{figure}{Testing \texttt{RRSched} configuration}
 	\label{fig:test-rr}
   \end{center}
   
   \subsection{Deficit Round Robin scheduler}
   \textbf{Location}: \texttt{4-scheduler/DRR\_Sched.click}\\
-  Deficit Round Robin Scheduler is built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows.
+  Deficit Round Robin Scheduler is a built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows.
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{drr-dense.png}
+	\includegraphics[width=0.70\textwidth]{drr-dense.png}
 	\captionof{figure}{Testing \texttt{DRRSched} configuration}
 	\label{fig:test-drr}
   \end{center}
   
   \subsection{Weighted Round Robin Scheduler}
-  We implement this scheduler in two versions. The first is compound elements that based on Round Robin scheduler. The second is a new element.
+  We implement this scheduler in two versions. The first is compound element that based on Round Robin scheduler. The second is a new element.
   \subsubsection{WRR scheduler - compound element}
   \textbf{Location}: \texttt{4-scheduler/WRR\_Sched.click}\\  
-  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. In practice, we need to take care of distribution of ports to have the fairness in response time. We test WRR scheduler by using three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound}.
+  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. Figure \ref{fig:wrr-compound} is an example of WRR with two weights: 1 and 2. Source 0 has weight 1 and connect to port 1 of \texttt{rrsched}. Source 1, weight 2, is provided two input ports (0 and 2) of \texttt{rrsched}. In practice, we need to take care of distribution of ports to have the fairness in response time. We test WRR scheduler by using three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound}.
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{wrr2-dense.png}
+	\includegraphics[width=0.70\textwidth]{2wrr.pdf}
+	\captionof{figure}{Configuration of \texttt{WRRSched} element}
+	\label{fig:wrr-compound}
+  \end{center}
+
+  \begin{center}
+	\includegraphics[width=0.70\textwidth]{wrr2-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} compound element}
 	\label{fig:test-wrr-compound}
   \end{center}
@@ -395,7 +408,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location}: \texttt{4-scheduler/WRR\_Sched\_element.click}\\  
   Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{wrr-dense.png}
+	\includegraphics[width=0.70\textwidth]{wrr-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} element}
 	\label{fig:test-wrr}
   \end{center}
