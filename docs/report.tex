@@ -414,6 +414,13 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
 
   \subsection{Weighted Deficit Round Robin scheduler}
+  \textbf{Location:} \texttt{4-scheduler/WDRR\_Sched.click}.
+  \begin{center}
+	\includegraphics[width=0.70\textwidth]{wdrr-dense-compound.png}
+	\captionof{figure}{Testing \texttt{WDRRSched} compound element}
+	\label{fig:test-wdrr-compound}
+  \end{center}
+
 
   \subsection{\texttt{SetVirtualClock} element} \label{section:virtualclock}
   It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. Computation of tag is: \\ 

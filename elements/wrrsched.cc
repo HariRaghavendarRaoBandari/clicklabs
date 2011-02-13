@@ -25,7 +25,7 @@
 CLICK_DECLS
 
 WRRSched::WRRSched()
-    : _next(0), _signals(0), _weights(0), _nweights(0), _porders(0), scale(1)
+    : _weights(0), _nweights(0), scale(1), _porders(0), _next(0), _signals(0)
 {
 }
 
