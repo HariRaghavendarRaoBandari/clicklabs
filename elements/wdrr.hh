@@ -49,10 +49,10 @@ class WDRRSched : public Element { public:
 
   private:
 
-    int _quantum;   // Number of bytes to send per round.
+    double _quantum;   // Number of bytes to send per round.
 
     Packet **_head; // First packet from each queue.
-    unsigned *_deficit;  // Each queue's deficit.
+    double *_deficit;  // Each queue's deficit.
     double *_weights;  // Each queue's weight.
     int _nweights;
     NotifierSignal *_signals;	// upstream signals

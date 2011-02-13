@@ -380,7 +380,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{Deficit Round Robin scheduler}
   \textbf{Location}: \texttt{4-scheduler/DRR\_Sched.click}\\
-  Deficit Round Robin Scheduler is a built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows.
+  Deficit Round Robin (DRR) Scheduler is a built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows. When working with DRR scheduler and checking its source code, we know that the quantum byte is 500. It means for each round, deficit of each flow is increased 500. If we setup flows with too small in packet length, those flows will send out a lot of packets before next flows are scheduled to send packets. Or in contrast, flows having large size packets will wait for a long time before sending out packets.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{drr-dense.png}
 	\captionof{figure}{Testing \texttt{DRRSched} configuration}
@@ -405,7 +405,9 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
   
   \subsubsection{WRR scheduler - new element}
-  \textbf{Location}: \texttt{4-scheduler/WRR\_Sched\_element.click}\\  
+  \textbf{Location}: \\
+  \texttt{elements/wrrsched.\{cc,hh\}} \\ 
+  \texttt{4-scheduler/WRR\_Sched\_element.click}\\
   Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wrr-dense.png}
@@ -414,14 +416,49 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
 
   \subsection{Weighted Deficit Round Robin scheduler}
-  \textbf{Location:} \texttt{4-scheduler/WDRR\_Sched.click}.
+  Similar to Weighted Round Robin (WRR), we also have two versions for Weighted Deficit Round Robin scheduler: compound element and new element.
+  \subsubsection{WDRR scheduler - compound element}
+  \textbf{Location:} \texttt{4-scheduler/WDRR\_Sched.click}.\\
+  The way of implementation is the same as WRR scheduler (compound element), that is to provide more input ports of Deficit Round Robin scheduler to the high weight input flows. Figure \ref{fig:test-wdrr-compound} shows the distribution of packets of each flow on the output link. We setup three flows with packet length 500, 1000, 1500 byte, and weights 1, 2, 3 respectively. We can see that a number of packets of each flows is nearly the same as we expect.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wdrr-dense-compound.png}
 	\captionof{figure}{Testing \texttt{WDRRSched} compound element}
 	\label{fig:test-wdrr-compound}
   \end{center}
 
-
+  \subsubsection{WDRR scheduler - new element}
+  \textbf{Location}: \\
+  \texttt{elements/wdrr.\{cc,hh\}} \\ 
+  \texttt{4-scheduler/WDRR\_Sched\_element.click}\\
+  There are some problems that motivate us to implement a new element for WDRR:
+  \begin{itemize}
+  	\item Quantum is fixed. It is not fair to flows having large size packets.
+  	\item Weights cannot be positive real number.
+  	\item Weights cannot be changed in runtime.
+  \end{itemize}
+  By inheriting from source code of DRR scheduler, we have just needed to modify at the time updating deficit: 
+  \begin{align*}
+    new\_deficit = old\_deficit + quantum * weight;
+  \end{align*}
+  We test this element with three flows. Flow0 has 100 byte of packet length, weight $0.2$. Flow1 has 200 byte of packet length, weight $0.4$. Flow2 has 400 byte of packet length, weight $0.8$. Output flow is shown in Figure \ref{fig:test-wdrr-element}. We can see that with these parameters, WDRR scheduler operates like a Round Robin scheduler.
+  \begin{center}
+	\includegraphics[width=0.70\textwidth]{wdrr-dense-element.png}
+	\captionof{figure}{Testing \texttt{WDRRSched} element}
+	\label{fig:test-wdrr-element}
+  \end{center}
+  
+  Since this element allows real numeric weight, there are some applications of this element:
+  \begin{itemize}
+  	\item Round Robin scheduling (figure \ref{fig:test-wdrr-element}). For each flow, setup
+  	\begin{align*}weight &= \frac{avg\_packet\_length}{quantum}\end{align*}
+  	\item Round Robin scheduling with some burst duration. For each flow, setup 
+  	\begin{align*}weight = \frac{burst\_duration*avg\_packet\_length}{quantum}\end{align*}
+  	\item Give more fairness in response time. For example, assume there are two flows: packet length in flow 0 is 100 byte, and packet length in flow 1 is 200 byte. With the built-in DRR scheduler, the sequence of packets on the output link is:
+  	  \begin{align*}f0, f0, f0, f0, f0, f1, f1, f0, f0, f0, f0, f0, f1, f1, f1, ... \end{align*}
+  	where $f0$, $f1$ are represented to a packet from flow0 and flow1 respectively. We can do more better by using WDRR scheduler with weights 0.2, 0.2. The sequence of packets is changed as:
+  	  \begin{align*}f0, f0, f1, f0, f0, f1, f0, f0, f1, f0, f0, f1, f0, f0, f1, ... \end{align*}  	 
+  \end{itemize}
+  
   \subsection{\texttt{SetVirtualClock} element} \label{section:virtualclock}
   It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. Computation of tag is: \\ 
   \begin{align*}

@@ -60,7 +60,7 @@ WDRRSched::configure(Vector<String> &conf, ErrorHandler *errh)
       return errh->error("argument %d should be positive real number", i+1);
 
    _weights = new double[vals.size()];
-   memcpy(_weights, &vals[0], vals.size() * sizeof(int));
+   memcpy(_weights, &vals[0], vals.size() * sizeof(double));
    _nweights = vals.size();
 
    if (_nweights != ninputs())
@@ -72,7 +72,7 @@ int
 WDRRSched::initialize(ErrorHandler *errh)
 {
     _head = new Packet *[ninputs()];
-    _deficit = new unsigned[ninputs()];
+    _deficit = new double[ninputs()];
     _signals = new NotifierSignal[ninputs()];
     if (!_head || !_deficit || !_signals)
 	return errh->error("out of memory!");
@@ -121,7 +121,7 @@ WDRRSched::pull(int)
 
 	if (p == 0)
 	    _deficit[_next] = 0;
-	else if (p->length() <= _deficit[_next]) {
+	else if ((double)p->length() <= _deficit[_next]) {
 	    _deficit[_next] -= p->length();
 	    _notifier.set_active(true);
 	    return p;
@@ -131,7 +131,7 @@ WDRRSched::pull(int)
 	_next++;
 	if (_next >= n)
 	    _next = 0;
-	_deficit[_next] += _quantum*_weights[_next];
+	_deficit[_next] += (_quantum * _weights[_next]);
     }
 
     _notifier.set_active(signals_on);
