@@ -54,7 +54,14 @@ Network management and QoS provisioning Course}
   \section{Introduction - ClickLabs package}
     \subsection{File organization}
       \begin{description}
-      	\item[elements/] This directory contains all the additional Click elements using in the lab.
+      	\item[elements/] This directory contains all the additional Click elements using in the lab. At this time, it includes:
+      	\begin{itemize}
+      		\item \texttt{randinfinitesource.\{hh,cc\}}: Similar \texttt{InfiniteSource} but random byte value in payload.
+      		\item \texttt{randomqueue.\{hh,cc\}}: Random Queue.
+      		\item \texttt{setvirtualclock.\{hh,cc\}}: Set Virtual Clock. It is used for GCRA and Virtual clock scheduler.
+      		\item \texttt{wrrsched.\{hh,cc\}}: Weighted Round Robin Scheduling.
+      		\item \texttt{wdrr.\{hh,cc\}}: Weighted Deficit Round Robin Scheduling.
+      	\end{itemize}
       	\item[plot-template/] This directory contains templates used for plotting data by \texttt{gnuplot}. These files are used by \texttt{draw-graph.sh}
       	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory elements (above). For more information, type: \\
       	\texttt{./update-elements.sh -h}
@@ -66,11 +73,11 @@ Network management and QoS provisioning Course}
       	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in Click dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use \texttt{convert-click-dump.sh} before using \texttt{draw-graph.sh}.
       	\item[bin/draw-graph-framerelay.sh] Based on draw-graph.sh, this script helps to show the characteristics of verifying a conformance flow (which is deal with CIR, CBS, EBS).
       	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a clicky diagram with style sheets written in a CSS-like language.      	
-      	\item[1-test-config/] Click configuration for the first part of Click Lab.
-      	\item[2-tcp-udp-generation/] Click configurations for the part of TCP/UDP generator.
-      	\item[3-shaper-policer/] Click configurations for the part of Shaper and Policer.
-      	\item[4-scheduler/] Click configurations for the last part of Scheduler.
-      	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED).
+      	\item[1-test-config/] This folder contains Click configurations for the first part of Click Lab: \texttt{Counter\_test}, \texttt{RandomQueue}, \texttt{RandInfiniteSource}, \texttt{Random\_IP\_generator}.
+      	\item[2-tcp-udp-generation/] This folder contains Click configurations for the part of TCP/UDP generator.
+      	\item[3-shaper-policer/] This folder contains Click configurations for the part of Shaper and Policer: uncontrolled flows, Leaky bucket, Token bucket, negotiation with \{CBS, EBS, CIR\}, GCRA.
+      	\item[4-scheduler/] This folder contains Click configurations for the part of Scheduler: FIFO, RR, DRR, WRR, WDRR, Virtual clock.
+      	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED for two flows).
       \end{description}
     
     \subsection{Some introductions before surfing Click configurations}
@@ -364,7 +371,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location}: \texttt{4-scheduler/FIFO\_Sched.click}\\
   There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. We test our FIFO scheduler with three flows and their rate respectively 1 pps, 3 pps, 6 pps. FIFO scheduler only processes 1 pps. Figure \ref{fig:test-fifo} shows the result that the high rate flow (blue color - out2) makes a huge effect on the output link.
   \begin{center}
-	\includegraphics[width=0.70\textwidth]{fifo-dense.png}
+	\includegraphics[height=0.3\textheight, width=0.70\textwidth]{fifo-dense.png}
 	\captionof{figure}{Testing \texttt{FIFOSched} configuration}
 	\label{fig:test-fifo}
   \end{center}
@@ -373,7 +380,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location}: \texttt{4-scheduler/RR\_Sched.click}\\
   Round Robin Scheduler is a built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link is shared fairly to all three flows (figure \ref{fig:test-rr}) but it does not take care of packet's length.
   \begin{center}
-	\includegraphics[width=0.70\textwidth]{rr-dense.png}
+	\includegraphics[height=0.3\textheight, width=0.70\textwidth]{rr-dense.png}
 	\captionof{figure}{Testing \texttt{RRSched} configuration}
 	\label{fig:test-rr}
   \end{center}
@@ -460,34 +467,52 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{itemize}
   
   \subsection{\texttt{SetVirtualClock} element} \label{section:virtualclock}
-  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. Computation of tag is: \\ 
+  \textbf{Location}: \texttt{elements/setvirtualclock.\{cc,hh\}}\\
+  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed values (virtual time, tag). Each time a packet arrives, it will set a new tag into timestamp annotation of packet. Computation of tag and virtual time is based on these equations: \\ 
   \begin{align*}
   F_{i}^{k} &= \max(F_{i}^{k-1}, V(a_{i}^{k})) + \frac{L_{i}^{k}}{r_i}\\
   V(0) &= 0 \\
   \frac{\partial V}{\partial \tau} &= \frac{1}{\sum r_j} \\
   \end{align*}
-  
+  To use this element, user needs to provide: $rate$ (bandwidth of a flow), $max\_bw$ (maximum bandwidth of output link), $current\_bw$ (current used bandwidth of output link). At runtime, this element allows user to read $last\_tag$ and also modify $rate$, $max\_bw$, $current\_bw$. When a packet arrives to this element, it does the following tasks:
+  \begin{itemize}
+  	\item Update virtual time: 
+  	\begin{align*}last\_virtual\_time += \frac{(current\_real\_time - last\_real\_time)*max\_bw}{current\_bw}\end{align*}
+  	\item Update tag:
+  	\begin{align*}last\_tag = \max(last\_tag, last\_virtual\_time) + \frac{packet\_length}{rate}\end{align*}
+  	\item Update packet's timestamp annotation to $last\_tag$
+  	\item Update parameter of \texttt{SetVirtualClock}: $last\_real\_time$ to the current time.  	
+  \end{itemize}
+  Note: when configuring \texttt{SetVirtualClock} with $max\_bw = current\_bw$, the virtual time is exactly the real time. We can use this property to implement GCRA and Virtual Clock scheduling.
   \subsection{Virtual Clock scheduler}
+  \textbf{Location}: \texttt{4-scheduler/VC\_Sched.click}\\
+  We implement the Virtual clock scheduler with support of \texttt{SetVirtualClock}. Each flow is connected to a \texttt{SetVirtualClock} and then to a \texttt{TimeSortedSched} (Figure \ref{fig:vcsched}). Element \texttt{SetVirtualClock} is set up with $MAXBW = CURRENTBW$.  
+
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{test-vcsched.pdf}
 	\captionof{figure}{\texttt{VirtualClock} scheduler with 3 flows}
 	\label{fig:vcsched}
   \end{center}
- 
-  \begin{center}
-	\includegraphics[width=0.80\textwidth]{vcs-dense.png}
-	\captionof{figure}{Testing \texttt{VirtualClock} scheduler with 3 flows}
-	\label{fig:test-vcs}
-  \end{center}
- 
+  Scenario of testing Virtual Clock scheduling: There are three flows,
+  \begin{itemize}
+  	\item Flow 0: Rated source, packet length 1 byte, rate 1 pps.
+  	\item Flow 1: Rated source, packet length 1 byte, rate 1 pps.
+  	\item Flow 2: Rated source, packet length 1 byte, rate 3 pps.
+  \end{itemize}
+  We set up three \texttt{SetVirtualClock} with the same parameters: 
+  \begin{align*}RATE = 1, MAXBW = 3, CURRENTBW = 3\end{align*} 
+  These parameters said that each flow can only use one-third bandwidth of output link. Output link speed is 1pps. Flow 2 is postponed 5 second later than flow 0 and flow 1. The result is shown in figure \ref{fig:test-vcs1}. We can see that when flow 2 starts to send packets, it does not make large effect to other flows but shares the output with others.
+  
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{vcs1-dense.png}
 	\captionof{figure}{Testing \texttt{VirtualClock} scheduler with 3 flows}
 	\label{fig:test-vcs1}
   \end{center}
   
-  \subsection{Weighted Fair Queue scheduler}
+  %\subsection{Weighted Fair Queue scheduler}
   \section{Congestion control}
+  \subsection{Weighted RED buffer management}
+  We want to build a Weighted RED (WRED) based on RED element. A WRED allows us to define some ranges of bandwidth, each range has a particular probability of dropping packets. The idea of implementation: Packets are classified by their rate (or a range of rate), and then let them go through a RED element used for this rate. We check this idea by writing a WRED that support two ranges of rate, see figure \ref{fig:wred2}.
     \begin{center}
 	  \includegraphics[scale=0.5]{wred2.pdf}
 	  \captionof{figure}{One simple implementation of \texttt{WRED} element}

@@ -54,17 +54,17 @@ vcsched
 -> ps::PaintSwitch;
 
 ps[0]
--> ToDump(out01, SNAPLEN 1)
+//-> ToDump(out01, SNAPLEN 1)
 //-> Print("flow 0", 1, TIMESTAMP true)
 -> Discard;
 
 ps[1]
--> ToDump(out11, SNAPLEN 1)
+//-> ToDump(out11, SNAPLEN 1)
 //-> Print("flow 1", 1, TIMESTAMP true)
 -> Discard;
 
 ps[2]
--> ToDump(out21, SNAPLEN 1)
+//-> ToDump(out21, SNAPLEN 1)
 //-> Print("flow 2", 1, TIMESTAMP true)
 -> Discard;
 
