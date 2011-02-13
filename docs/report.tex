@@ -287,26 +287,26 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
   Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
   \begin{itemize}
-  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increase with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, the capacity of queue is decreased one. To allow repeating burst at any interval time, this element uses flag REPEATED.
-  	\item \texttt{RatedTokenBucketPolicer2}: This element uses a sample source (same rate as token bucket, operating as a token generator) and two counters to count the number of output packets ($CI$) and the number of generated token packets ($CT$). This element guarantees this condition: \\ 
-  	\begin{align*}CI \le CT \le CI + burst \end{align*}
-  	If it is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (there is no queue to store input packets) while other implementations try to store input packets first and then regulate the output flow at a specific rate.
+  	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increased with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, size of queue is decreased one. To allow repeating burst at any periodic interval time, this element uses flag REPEATED.
+  	\item \texttt{RatedTokenBucketPolicer2}: This element uses a sample source (same rate as token bucket, operating as a \textit{token generator}) and two counters counting the number of output packets ($CO$) and the number of generated token packets ($CT$). This element guarantees that at any time, \\ 
+  	\begin{align*}CO \le CT \le CO + burst\_duration \end{align*}
+  	If it is satisfied, input packets are pushed to output immediately, otherwise they are dropped. This element releases packets to output as soon as possible (no queue is needed to store input packets) while other implementations try to store input packets first and then regulate the output flow at a given rate.
   \end{itemize} 
   \begin{center}
-	\includegraphics[width=1.0\textwidth]{token-shaper.pdf}
+	\includegraphics[width=0.8\textwidth]{token-shaper.pdf}
 	\captionof{figure}{Token bucket configuration \texttt{RatedTokenBucketShaper3}}
 	\label{fig:test-token}
   \end{center}
   
   \begin{center}
-	\includegraphics[width=0.8\textwidth]{token-count.png}
+	\includegraphics[width=0.7\textwidth]{token-count.png}
 	\captionof{figure}{Number of packets at input (uncontrolled flow) and output of token policer and shaper}
 	\label{fig:test-tokenpolicer-graph}
   \end{center} 
 
   Figure \ref{fig:test-token-leaky-graph} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{BurstUncontrolledFlow}  (rate is 1 pps and maximum burst is 8) by a token and a leaky bucket policer. Token bucket policer is \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10), and leaky policer is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). We see that token policer can allow some burst duration but leaky policer limits it.
   \begin{center}
-	\includegraphics[width=0.8\textwidth]{compare-lk-tk.png}
+	\includegraphics[width=0.7\textwidth]{compare-lk-tk.png}
 	\captionof{figure}{Comparision of Token bucket and Leaky bucket}
 	\label{fig:test-token-leaky-graph}
   \end{center} 
@@ -329,10 +329,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\captionof{figure}{Implementation of \texttt{RatedNegotiablePolicer4}}
 	\label{fig:negotiation4}
   \end{center}
-  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-test}. The red line (\texttt{dumpin2}) is presentation of input flow. The green line (\texttt{dumpout2}) is presented \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4}. to We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets follow rules of negotiation. 
+  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-test}. The red line (\texttt{dumpin2}) is representation of input flow. The green line (\texttt{dumpout2}) is represented to \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4} (\texttt{dumpout4}). We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets following the rules of negotiation, but line of (\texttt{dumpout4}) is a little higher than line of (\texttt{dumpout2}).
     \begin{figure}
     \centering
-    \subfloat[Number of packets in a time interval $CBS/CIR$]{
+    \subfloat[Number of packets in a time interval $T=\frac{CBS}{CIR}=0.5s$]{
       \includegraphics[width=0.55\textwidth]{negotiation-check.png}
 	    \label{fig:negotiation-check}}
     \subfloat[Number of packets over time]{
@@ -345,10 +345,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 
   \subsection{Generic Cell Rate Algorithm - GCRA}
   \textbf{Location:} \texttt{3-shaper-policer/gcra.click} \\
-  GCRA configuration is in figure \ref{fig:gcra}. We implement this element by using \texttt{SetVirtualClock}. Element \texttt{SetVirtualClock} works as following: when a packet comes to this element, it will set this packet's timestamp annotation to a new value, and also remember the last theoritical cell arrival time ($TAT$). Before letting packets approach \texttt{SetVirtualClock}, packets have to go through script \texttt{CheckTime}. If packet comes too soon, it will be dropped, otherwise it will go to \texttt{SetVirtualClock} and make a new $TAT$. We test this element by a \texttt{ProbUncontrolledFlow} with maximum rate 10 pps. Our \texttt{GCRA} is set up to allow $TAT = 0.2$ and $\tau = 0$. The result is shown in figure \ref{fig:test-gcra}. This figure represents the packet arrival time of input (lower part) and output. As we can see, output flow is less dense than input flow, and the inter-time between packets is guaranteed. 
+  GCRA configuration is in figure \ref{fig:gcra}. We implement this element by using \texttt{SetVirtualClock}. Element \texttt{SetVirtualClock} works as following (more details in section~\ref{section:virtualclock}): when a packet comes to this element, it will set this packet's timestamp annotation to a new value, and also remember the last theoritical cell arrival time ($TAT$). Before letting packets approach \texttt{SetVirtualClock}, packets have to go through script \texttt{CheckTime}. If packet comes too soon, it will be dropped, otherwise it will go to \texttt{SetVirtualClock} and make a new $TAT$. We test this element by a \texttt{ProbUncontrolledFlow} with maximum rate 10 pps. Our \texttt{GCRA} is set up to allow $TAT = 0.2$ and $\tau = 0$. In figure \ref{fig:test-gcra}, we plot the packet arrival time of input (lower part) and output and see that output flow is less dense than input flow, and the inter-time between packets is guaranteed. 
 
   \begin{center}
-	\includegraphics[width=0.80\textwidth]{gcra.pdf}
+	\includegraphics[width=0.80\textwidth]{gcra1.pdf}
 	\captionof{figure}{\texttt{GCRA} configuration}
 	\label{fig:gcra}
   \end{center}
@@ -371,7 +371,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{Round Robin scheduler}
   \textbf{Location}: \texttt{4-scheduler/RR\_Sched.click}\\
-  Round Robin Scheduler is a built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link is shared fairly to all three flows (figure \ref{fig:test-rr}).
+  Round Robin Scheduler is a built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link is shared fairly to all three flows (figure \ref{fig:test-rr}) but it does not take care of packet's length.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{rr-dense.png}
 	\captionof{figure}{Testing \texttt{RRSched} configuration}
@@ -391,10 +391,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   We implement this scheduler in two versions. The first is compound element that based on Round Robin scheduler. The second is a new element.
   \subsubsection{WRR scheduler - compound element}
   \textbf{Location}: \texttt{4-scheduler/WRR\_Sched.click}\\  
-  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. Figure \ref{fig:wrr-compound} is an example of WRR with two weights: 1 and 2. Source 0 has weight 1 and connect to port 1 of \texttt{rrsched}. Source 1, weight 2, is provided two input ports (0 and 2) of \texttt{rrsched}. In practice, we need to take care of distribution of ports to have the fairness in response time. We test WRR scheduler by using three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound}.
+  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. Figure \ref{fig:wrr-compound} is an example of WRR with two weights: 1 and 2. Source \texttt{s0} has weight 1 and connect to port 1 of \texttt{rrsched}. Source \texttt{s1}, weight 2, is provided two input ports (0 and 2) of \texttt{rrsched}. In practice, we need to take care of distribution of ports to have the fairness in response time. Besides, this approach also loses the sequence of packets in each flow. We build another WRR scheduler supporting three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound} which presents the timestamp of packets at output link.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{2wrr.pdf}
-	\captionof{figure}{Configuration of \texttt{WRRSched} element}
+	\captionof{figure}{Configuration of \texttt{WRRSched} compound element with two input flows and weight 1, 2}
 	\label{fig:wrr-compound}
   \end{center}
 
@@ -406,7 +406,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsubsection{WRR scheduler - new element}
   \textbf{Location}: \texttt{4-scheduler/WRR\_Sched\_element.click}\\  
-  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
+  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wrr-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} element}
@@ -414,8 +414,8 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \end{center}
 
   \subsection{Weighted Deficit Round Robin scheduler}
-  Not implement as a new Click element but only a compound element, similar to the compound element of WRR scheduler.
-  \subsection{\texttt{SetVirtualClock} element}
+
+  \subsection{\texttt{SetVirtualClock} element} \label{section:virtualclock}
   It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed value. Each time a packet arrives, it will set a new virtual time (tag) into timestamps annotation of packet. Computation of tag is: \\ 
   \begin{align*}
   F_{i}^{k} &= \max(F_{i}^{k-1}, V(a_{i}^{k})) + \frac{L_{i}^{k}}{r_i}\\

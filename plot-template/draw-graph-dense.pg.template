@@ -29,7 +29,7 @@ set style data boxes
 #set style data lines
 #set style data impulses
 
-set boxwidth 0.4
+set boxwidth 0.02
 set style fill solid 0.3
 #set style boxplot outliers pointtype 7
 set pointsize 1
