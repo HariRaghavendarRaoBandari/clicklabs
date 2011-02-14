@@ -21,9 +21,9 @@ set title "TITLE"
 set grid
 
 #set style data linespoints
-#set style data points
+set style data points
 #set style data boxplot
-set style data boxes
+#set style data boxes
 #set style data dots
 #set style data fsteps
 #set style data lines
