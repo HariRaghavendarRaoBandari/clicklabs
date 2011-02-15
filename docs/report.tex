@@ -28,13 +28,14 @@ Network management and QoS provisioning Course}
 \begin{document}
   \maketitle
   \tableofcontents
+  \newpage
 
   \definecolor{stringcolor}{rgb}{0.20,0.50,0.20}
   \definecolor{commentcolor}{rgb}{0.40,0.40,0.40}
   \definecolor{keywordcolor}{rgb}{0.50,0.10,0.10}
   \definecolor{idcolor}{rgb}{0.10,0.10,0.50}
   \definecolor{bg}{rgb}{0.95,0.95,0.95}  
-  \lstdefinestyle{C}{basicstyle=\ttfamily,
+  \lstdefinestyle{iizke}{basicstyle=\ttfamily,
                           keywordstyle=*\color{keywordcolor}\bfseries,
                           identifierstyle=\color{idcolor},
                           commentstyle={\color{black}\it},
@@ -65,13 +66,13 @@ Network management and QoS provisioning Course}
       	\item[plot-template/] This directory contains templates used for plotting data by \texttt{gnuplot}. These files are used by \texttt{draw-graph.sh}
       	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory elements (above). For more information, type: \\
       	\texttt{./update-elements.sh -h}
-      	\item[bin/visual-clicky.sh]Shell script to visualize click experiment using \texttt{clicky}. For more information, type: \\ 
+      	\item[bin/visual-clicky.sh]Shell script to visualize Click experiment using \texttt{clicky}. For more information, type: \\ 
       	\texttt{./visual-clicky.sh -h}
-      	\item[bin/init.sh]Initialize Click environment for lab. Just run \texttt{init.sh} in the first time you get this source or Click source directory changed.
-      	\item[bin/eclick-compile.sh] Extend the Click file. A Click file can include another one to reuse some compound elements (similar include in C, or import in Java). File \texttt{eclick-compile.sh} is used to translate (or flatten) these extended-Click file to a normal Click file.
-      	\item[bin/convert-click-dump.sh]This script used to transform dump files from Click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
+      	\item[bin/init.sh]Initialize Click environment for laboratory. Just run \texttt{init.sh} in the first time you get this source or whenever Click source location is changed.
+      	\item[bin/eclick-compile.sh] Extend the Click file. A Click file can include another one to reuse some compound elements (similar \texttt{include} in C, or \texttt{import} in Java). File \texttt{eclick-compile.sh} is used to translate (or flatten) these extended-Click file to a normal Click file.
+      	\item[bin/convert-click-dump.sh]This script is used to transform dump files from Click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
       	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in Click dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use \texttt{convert-click-dump.sh} before using \texttt{draw-graph.sh}.
-      	\item[bin/draw-graph-framerelay.sh] Based on draw-graph.sh, this script helps to show the characteristics of verifying a conformance flow (which is deal with CIR, CBS, EBS).
+      	\item[bin/draw-graph-negotiation.sh] Based on \texttt{draw-graph.sh}, this script helps to show the characteristics of verifying a conformance flow (which is a deal with \texttt{CIR, CBS, EBS}).
       	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a clicky diagram with style sheets written in a CSS-like language.      	
       	\item[1-test-config/] This folder contains Click configurations for the first part of Click Lab: \texttt{Counter\_test}, \texttt{RandomQueue}, \texttt{RandInfiniteSource}, \texttt{Random\_IP\_generator}.
       	\item[2-tcp-udp-generation/] This folder contains Click configurations for the part of TCP/UDP generator.
@@ -80,7 +81,7 @@ Network management and QoS provisioning Course}
       	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED for two flows).
       \end{description}
     
-    \subsection{Some introductions before surfing Click configurations}
+    \subsection{Some introductions or tips before surfing Click configurations}
       \begin{enumerate}
       	\item 
       	  First of all, initialize the Click environment for these stuffs. Run file \texttt{init.sh}: \\
@@ -90,11 +91,11 @@ Network management and QoS provisioning Course}
             \texttt{export CLICK\_SRC=/home/iizke/click/click-1.8.0}
         
         \item 
-          While finishing to code some Click elements, put it in directory \texttt{elements}, and then run file \texttt{update-elements.sh} to compile and install new elements: \\
+          When finishing to write some codes of Click elements (not configurations), put it in directory \texttt{elements}, and then run file \texttt{update-elements.sh} to compile and install new elements: \\
     \texttt{update-elements.sh}
-        \item
-        Explore the Click configuration by using tool \texttt{visual-clicky.sh}. Simple way to use: \\    
-    \texttt{visual-clicky.sh \$CLICK\_CONFIGURATION\_FILE}
+        \item Explore and test Click configurations by using tool \texttt{visual-clicky.sh}. Simple way to use: \\    
+    \texttt{visual-clicky.sh \$CLICK\_CONFIGURATION\_FILE} \\
+    This tool helps us to run this configurations in Click and visualize its activities by clicky. In the case of testing without clicky, for example dumping input and output packets to files, we can add option \texttt{--noclicky} to avoid using clicky (for good performance) but just transforming extended-Click file to normal Click file (if necessary) and running it in Click.
         \item
         To support easy-reading and team-working activities, we developed a tool to allow including some Click files into one Click file. If you write some Click files as "\textit{library}" files, you can reuse it by using \textit{include statements}. For example, we have \texttt{TCP\_Source.click} to implement a TCP-generator, and \texttt{UDP\_Source.click} to implement an UDP-generator. In \texttt{TCP\_UDP.click}, we reuse the implementation of these generator by adding these lines at anywhere in \texttt{TCP\_UDP.click} file (but should be on the top for easy reading): \\
         \texttt{
@@ -415,7 +416,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location}: \\
   \texttt{elements/wrrsched.\{cc,hh\}} \\ 
   \texttt{4-scheduler/WRR\_Sched\_element.click}\\
-  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps, and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. We test with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
+  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps (virtual input ports), and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. WRR in our implementation is the RR scheduling on virtual ports. We test this new element of WRR with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wrr-dense.png}
 	\captionof{figure}{Testing \texttt{WRRSched} element}
@@ -447,7 +448,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \begin{align*}
     new\_deficit = old\_deficit + quantum * weight;
   \end{align*}
-  We test this element with three flows. Flow0 has 100 byte of packet length, weight $0.2$. Flow1 has 200 byte of packet length, weight $0.4$. Flow2 has 400 byte of packet length, weight $0.8$. Output flow is shown in Figure \ref{fig:test-wdrr-element}. We can see that with these parameters, WDRR scheduler operates like a Round Robin scheduler.
+  We test this element with three flows. Flow0 has 100 byte of packet length, weight $0.2$. Flow1 has 200 byte of packet length, weight $0.4$. Flow2 has 400 byte of packet length, weight $0.8$. We use small weights because packet length in these flows is smaller than quantum value (500) and we do not want burst duration on the output link. Output flow is shown in Figure \ref{fig:test-wdrr-element}. We can see that with these parameters, WDRR scheduler operates like a Round Robin scheduler.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wdrr-dense-element.png}
 	\captionof{figure}{Testing \texttt{WDRRSched} element}
@@ -468,7 +469,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{\texttt{SetVirtualClock} element} \label{section:virtualclock}
   \textbf{Location}: \texttt{elements/setvirtualclock.\{cc,hh\}}\\
-  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed values (virtual time, tag). Each time a packet arrives, it will set a new tag into timestamp annotation of packet. Computation of tag and virtual time is based on these equations: \\ 
+  It is a new Click element which is used to support Virtual Clock scheduler and Weighted Fair Queue scheduler. Its important feature is the ability of remembering the last computed values (last virtual time, last real time and tag). Each time a packet arrives, it will set a new tag into timestamp annotation of packet. Computation of tag and virtual time is based on these equations: \\ 
   \begin{align*}
   F_{i}^{k} &= \max(F_{i}^{k-1}, V(a_{i}^{k})) + \frac{L_{i}^{k}}{r_i}\\
   V(0) &= 0 \\
@@ -486,7 +487,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   Note: when configuring \texttt{SetVirtualClock} with $max\_bw = current\_bw$, the virtual time is exactly the real time. We can use this property to implement GCRA and Virtual Clock scheduling.
   \subsection{Virtual Clock scheduler}
   \textbf{Location}: \texttt{4-scheduler/VC\_Sched.click}\\
-  We implement the Virtual clock scheduler with support of \texttt{SetVirtualClock}. Each flow is connected to a \texttt{SetVirtualClock} and then to a \texttt{TimeSortedSched} (Figure \ref{fig:vcsched}). Element \texttt{SetVirtualClock} is set up with $MAXBW = CURRENTBW$.  
+  We implement the Virtual clock scheduler with support of \texttt{SetVirtualClock}. Each flow is connected to a \texttt{SetVirtualClock} and then to a \texttt{TimeSortedSched} (Figure \ref{fig:vcsched}). Element \texttt{SetVirtualClock} is set up with $MAXBW = CURRENTBW$. With this configuration, packets out of \texttt{SetVirtualClock} will have a new timestamp following the rule of Virtual Clock scheduling. At that time, packets will go through element \texttt{TimeSortedSched} which is a scheduler based on timestamp of packets.
 
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{test-vcsched.pdf}
@@ -518,7 +519,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	  \captionof{figure}{One simple implementation of \texttt{WRED} element}
 	  \label{fig:wred2}
     \end{center}
-  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets, which result is shown in figure \ref{fig:wred2}, as following:
+  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets, which result is shown in figure \ref{fig:test-wred2}, as following:
   \begin{itemize}
   	\item Output link speed begins with input link speed.
   	\item Reset all counters: number of input packets, number of dropped packets
@@ -532,4 +533,29 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\captionof{figure}{Testing \texttt{WRED2}}
 	\label{fig:test-wred2}
   \end{center}
+  \newpage
+  \appendix
+  \section{Appendix}
+
+  \subsection{Command \texttt{init.sh}}
+  \lstinputlisting[style=iizke]{init.sh.man}
+
+  \subsection{Command \texttt{visual-clicky.sh}}
+  \lstinputlisting[style=iizke]{visual-clicky.sh.man}
+
+  \subsection{Command \texttt{update-elements.sh}}
+  \lstinputlisting[style=iizke]{update-elements.sh.man}
+  
+  \subsection{Command \texttt{eclick-compile.sh}}
+  \lstinputlisting[style=iizke]{eclick-compile.sh.man}
+
+  \subsection{Command \texttt{convert-click-dump.sh}}
+  \lstinputlisting[style=iizke]{convert-click-dump.sh.man}
+  
+  \subsection{Command \texttt{draw-graph.sh}}
+  \lstinputlisting[style=iizke]{draw-graph.sh.man}
+  
+  \subsection{Command \texttt{draw-graph-negotiation.sh}}
+  \lstinputlisting[style=iizke]{draw-graph-negotiation.sh.man}
+
 \end{document}

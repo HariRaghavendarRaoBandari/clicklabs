@@ -1,6 +1,7 @@
 ##
 # library of functions 
 
+if [ "$_COLOR_" != "false" ]; then
 txtrst=$(tput sgr0) # Text reset
 txtred=$(tput setaf 1) # Red
 txtgrn=$(tput setaf 2) # Green
@@ -20,6 +21,27 @@ bgrwht=$(tput setab 7) # White
 bold=$(tput bold)
 smul=$(tput smul)
 rmul=$(tput rmul)
+else
+txtrst= # Text reset
+txtred= # Red
+txtgrn= # Green
+txtylw= # Yellow
+txtblu= # Blue
+txtpur= # Purple
+txtcyn= # Cyan
+txtwht= # White
+bgrred= # Red
+bgrgrn= # Green
+bgrylw= # Yellow
+bgrblu= # Blue
+bgrpur= # Purple
+bgrcyn= # Cyan
+bgrwht= # White
+
+bold=
+smul=
+rmul=
+fi
 
 #Binary class file to check a string of date
 #TESTDATE=/root/svn-local/tools/src/testDate

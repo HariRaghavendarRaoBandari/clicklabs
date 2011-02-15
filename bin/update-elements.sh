@@ -7,6 +7,23 @@ FILEDIR=$(dirname $(which $BASH_SOURCE))
 CLICKLAB_HOME=$FILEDIR/..
 # Bash shell script library functions
 source $FILEDIR/../libs/libfuncs.sh 2>/dev/null
+
+option_config_add "DESCRIPTION" \
+                  "update-elements.sh" \
+                  "1" \
+                  "Support adding new elements into Click source file and then compile them as Click element"
+option_config_add "-h" \
+                  "HELP" \
+                  "0" \
+                  "Show information about update-elements.sh"
+
+option_parse "$@"
+
+if [ "$HELP" == "true" ]; then
+  option_usage_print
+  exit 0
+fi
+
 # File .clickrc represents the Click source path 
 source ~/.clickrc 2>/dev/null
 

@@ -10,17 +10,17 @@ trap clean 2 EXIT SIGTERM
 #clean () { return }
 
 option_config_add "DESCRIPTION" \
-                  "draw-graph-framerelay.sh" \
+                  "draw-graph-negotiation.sh" \
                   "1" \
                   "Drawing graph from traced packet dump file, especially for frame relay network" 
 option_config_add "--help" \
                   "HELP" \
                   "0" \
-                  "Help on draw-graph-framerelay.sh"
+                  "Help on draw-graph-negotiation.sh"
 option_config_add "-h" \
                   "HELP" \
                   "0" \
-                  "Help on draw-graph-framerelay.sh"
+                  "Help on draw-graph-negotiation.sh"
 option_config_add "-o" \
                   "OUTPUT" \
                   "1" \
