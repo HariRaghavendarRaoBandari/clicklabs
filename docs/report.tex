@@ -518,5 +518,18 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	  \captionof{figure}{One simple implementation of \texttt{WRED} element}
 	  \label{fig:wred2}
     \end{center}
-  
+  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets, which result is shown in figure \ref{fig:wred2}, as following:
+  \begin{itemize}
+  	\item Output link speed begins with input link speed.
+  	\item Reset all counters: number of input packets, number of dropped packets
+  	\item Restart input source, wait for stable average queue size (we let it wait for 10 second).
+  	\item Stop source, and then calculate probability of dropped packets.
+  	\item Print to log file information of this probability and average queue size.
+  	\item Change output link speed to another value and return to step 2.
+  \end{itemize}
+  \begin{center}
+	\includegraphics[width=0.70\textwidth]{wred2.png}
+	\captionof{figure}{Testing \texttt{WRED2}}
+	\label{fig:test-wred2}
+  \end{center}
 \end{document}

@@ -78,6 +78,10 @@ option_config_add "--template" \
                   "TEMPLATE" \
                   "1" \
                   "Plot template"
+option_config_add "--plot-option" \
+                  "PLOTOPT" \
+                  "1" \
+                  "Plot option"
 
 option_parse "$@"
 
@@ -282,12 +286,12 @@ count=0
 for f in $DATA; do
   if [ "$MULTIPLOT" == "false" ]; then
     if [ $count -eq 0 ]; then
-      PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\"\\"
+      PLOTSTR="\"$f\" using $XCOL:$YCOL title \"`basename $f`\" $PLOTOPT\\"
     else
-      PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\"\\"
+      PLOTSTR=",\"$f\" using $XCOL:$YCOL title \"`basename $f`\" $PLOTOPT\\"
     fi
   else
-    PLOTSTR="set origin DX,DY+SY*$count; plot \"$f\" using $XCOL:$YCOL title \"`basename $f`\";"
+    PLOTSTR="set origin DX,DY+SY*$count; plot \"$f\" using $XCOL:$YCOL title \"`basename $f`\" $PLOTOPT;"
   fi
   count=$((count+1))
   echo $PLOTSTR >> $PLOTSCRIPT
