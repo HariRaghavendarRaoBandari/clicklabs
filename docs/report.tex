@@ -78,7 +78,7 @@ Network management and QoS provisioning Course}
       	\item[2-tcp-udp-generation/] This folder contains Click configurations for the part of TCP/UDP generator.
       	\item[3-shaper-policer/] This folder contains Click configurations for the part of Shaper and Policer: uncontrolled flows, Leaky bucket, Token bucket, negotiation with \{CBS, EBS, CIR\}, GCRA.
       	\item[4-scheduler/] This folder contains Click configurations for the part of Scheduler: FIFO, RR, DRR, WRR, WDRR, Virtual clock.
-      	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED for two flows).
+      	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED for two ranges of input bandwidth).
       \end{description}
     
     \subsection{Some introductions or tips before surfing Click configurations}
@@ -519,7 +519,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	  \captionof{figure}{One simple implementation of \texttt{WRED} element}
 	  \label{fig:wred2}
     \end{center}
-  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets, which result is shown in figure \ref{fig:test-wred2}, as following:
+  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets as following:
   \begin{itemize}
   	\item Output link speed begins with input link speed.
   	\item Reset all counters: number of input packets, number of dropped packets
@@ -528,8 +528,13 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   	\item Print to log file information of this probability and average queue size.
   	\item Change output link speed to another value and return to step 2.
   \end{itemize}
+  For testing, we set up two RED elements with parameters:
+  \begin{itemize}
+  	\item RED 1: $MIN\_THRESH = 40, MAX\_THRESH = 80, MAX\_P = 0.4$ for a range of input bandwidth $0.2KBps \to 12KBps$.
+  	\item RED 2: $MIN\_THRESH = 50, MAX\_THRESH = 80, MAX\_P = 0.3$ for a range of input bandwidth $12KBps \to \infty$.
+  \end{itemize}
   \begin{center}
-	\includegraphics[width=0.70\textwidth]{wred2.png}
+	\includegraphics[width=0.80\textwidth]{wred2.png}
 	\captionof{figure}{Testing \texttt{WRED2}}
 	\label{fig:test-wred2}
   \end{center}
