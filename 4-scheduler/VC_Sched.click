@@ -37,14 +37,14 @@ elementclass 3flows_VCSched {
 // This code implement VC Sched based on TimeSortedSched
 vcsched::3flows_VCSched(1,1,1);
 
-RatedSource(RATE 1, LENGTH 1, STOP false, LIMIT 10)
+RatedSource(RATE 1, LENGTH 3, STOP false, LIMIT 50)
 -> [0]vcsched; 
 
-RatedSource(RATE 1, LENGTH 1, STOP false, LIMIT 10)
+RatedSource(RATE 1, LENGTH 3, STOP false, LIMIT 50)
 -> [1]vcsched;
 
-Delay3::Script(TYPE ACTIVE, wait 5, write s3.active true);
-s3::RatedSource(RATE 3, LENGTH 1, STOP false, LIMIT 10, ACTIVE false)
+Delay3::Script(TYPE ACTIVE, wait 30, write s3.active true);
+s3::RatedSource(RATE 1, LENGTH 3, STOP false, LIMIT 50, ACTIVE false)
 -> [2]vcsched;
 
 vcsched
@@ -54,17 +54,17 @@ vcsched
 -> ps::PaintSwitch;
 
 ps[0]
-//-> ToDump(out01, SNAPLEN 1)
+-> ToDump(out01, SNAPLEN 1)
 //-> Print("flow 0", 1, TIMESTAMP true)
 -> Discard;
 
 ps[1]
-//-> ToDump(out11, SNAPLEN 1)
-//-> Print("flow 1", 1, TIMESTAMP true)
+-> ToDump(out11, SNAPLEN 1)
+-> Print("flow 1", 1, TIMESTAMP true)
 -> Discard;
 
 ps[2]
-//-> ToDump(out21, SNAPLEN 1)
+-> ToDump(out21, SNAPLEN 1)
 //-> Print("flow 2", 1, TIMESTAMP true)
 -> Discard;
 

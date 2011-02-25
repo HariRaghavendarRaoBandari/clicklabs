@@ -57,7 +57,7 @@ class SetVirtualClock : public Element { public:
     ~SetVirtualClock();
 
     const char *class_name() const		{ return "SetVirtualClock"; }
-    const char *port_count() const		{ return PORTS_1_1; }
+    const char *port_count() const		{ return PORTS_1_1X2; }
     const char *processing() const		{ return AGNOSTIC; }
     int configure(Vector<String> &, ErrorHandler *);
 
@@ -75,6 +75,7 @@ class SetVirtualClock : public Element { public:
     bool _active;    
     
     static int change_param(const String &, Element *, void *, ErrorHandler *);
+    void update_tv(void);
 };
 
 CLICK_ENDDECLS

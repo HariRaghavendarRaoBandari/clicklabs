@@ -5,6 +5,14 @@ set font "Times,8"
 set size ratio 0.5 
 set output "OUTPUT"
 
+NX=1;
+NY=1;
+DX=0.00; DY=0.00;
+SX=0.85;
+SY=1
+set bmargin DX;
+set tmargin DX;
+
 set tics format "%.2f"
 set timefmt "%S"
 

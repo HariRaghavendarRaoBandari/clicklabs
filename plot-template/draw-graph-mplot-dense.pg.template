@@ -32,7 +32,7 @@ set grid
 #set style data impulses
 set style data boxes
 
-set boxwidth 0.02
+set boxwidth 0.001
 set style fill solid 0.5
 set style line 1 lt 1 lw 1
 set style line 2 lt 2 lw 1

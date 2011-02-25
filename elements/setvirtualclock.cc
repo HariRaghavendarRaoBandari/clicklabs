@@ -29,9 +29,10 @@ CLICK_DECLS
 
 SetVirtualClock::SetVirtualClock()
 {
-  last_tag_tv = (Timestamp)0;
-  last_virtual_tv = (Timestamp)0;
-  last_real_tv = (Timestamp)0;
+  Timestamp now = Timestamp::now();
+  last_tag_tv = now;
+  last_virtual_tv = now;
+  last_real_tv = now;
   rate = 1;
   maxbw = 1;
   currentbw = 1;
@@ -65,21 +66,38 @@ SetVirtualClock::simple_action(Packet *p)
 {
   if (!_active)
     return p;
+  if (rate == 0) {
+    // Drop packet or push to output 1
+    checked_output_push(1, p);
+    return 0;
+  }
 
   uint32_t len = p->length();
   double d = (double)((double)len/(double)rate);
-  Timestamp now_real_tv = Timestamp::now();
-  Timestamp now_virtual_tv = last_virtual_tv + (now_real_tv - last_real_tv)*(double)maxbw/(double)currentbw;
 
-  if (last_tag_tv > now_virtual_tv) 
+  update_tv();
+
+  if (last_tag_tv > last_virtual_tv) 
     p->timestamp_anno() = last_tag_tv + (Timestamp)(d);
   else
-    p->timestamp_anno() = now_virtual_tv + (Timestamp)(d);
-  //click_chat("d = %d\n", d);
+    p->timestamp_anno() = last_virtual_tv + (Timestamp)(d);
+  //click_chatter("d = %d\n", d);
   last_tag_tv = p->timestamp_anno();
-  last_real_tv = now_real_tv;
-  last_virtual_tv = now_virtual_tv;
   return p;
+}
+
+void
+SetVirtualClock::update_tv(void) 
+{
+  Timestamp now_real_tv = Timestamp::now();
+  if (currentbw == 0) {
+    last_virtual_tv = now_real_tv;
+    last_real_tv = now_real_tv;
+  } else {
+  last_virtual_tv += (now_real_tv - last_real_tv)*(double)maxbw/(double)currentbw;
+  last_real_tv = now_real_tv;
+  }
+  //click_chatter("last_vt = %f, last_rt = %f\n", last_virtual_tv.doubleval(), last_real_tv.doubleval());
 }
 
 enum { H_WRATE, H_WRESET, H_WMAXBW, H_WCURRENTBW};
@@ -108,6 +126,8 @@ SetVirtualClock::change_param(const String &s, Element *e, void *vparam,
       uint32_t cb;
       if (!cp_integer(s, &cb))
         return errh->error("currentbw parameter must be integer");
+      // update last_real_tv and last_virtual_tv
+      svc->update_tv();
       svc->currentbw = cb;
       break;
     }

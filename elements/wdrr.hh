@@ -9,7 +9,7 @@ CLICK_DECLS
 
 /*
  * =c
- * WDRRSched (weight0, weight1, ...)
+ * WDRRSched(weight0, weight1, ...)
  * =s scheduling
  * pulls from inputs with weighted deficit round robin scheduling
  * =io

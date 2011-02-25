@@ -128,3 +128,34 @@ Discard {
 RED {
   text: "%n\n<b><small>%{stats}\n%c</small></b>"
 }
+
+
+Print {
+    display: passthrough;
+}
+
+Discard {
+    display: passthrough;
+}
+
+*Paint* {
+  display: passthrough;
+}
+
+//////////////////////////////////////
+
+*EDD* {
+  //display: passthrough;
+}
+
+*Rated* {
+//  display: passthrough;
+}
+
+SetDeadline {
+//  display: closed;
+}
+
+*Unqueue* {
+//  display: passthrough;
+}

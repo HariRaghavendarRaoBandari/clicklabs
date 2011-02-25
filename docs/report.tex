@@ -20,7 +20,7 @@
 \hypersetup{linktocpage}
 \renewcommand{\familydefault}{cmr}
 
-\title{Report of Click Labs \\
+\title{Practical report of ClickLabs \\
 Network management and QoS provisioning Course}
 \author{Hong-Nam Hoang, Manh-Ha Nguyen and Xuan-Thu Thi Le}
 \date{\today}
@@ -53,18 +53,24 @@ Network management and QoS provisioning Course}
     morekeywords={elementclass, Counter, InfiniteSource, RateSource, Print, Paint, PaintSwitch, Script}}
 
   \section{Introduction - ClickLabs package}
+  ClickLabs source: \url{http://clicklabs.googlecode.com}.
     \subsection{File organization}
       \begin{description}
       	\item[elements/] This directory contains all the additional Click elements using in the lab. At this time, it includes:
       	\begin{itemize}
       		\item \texttt{randinfinitesource.\{hh,cc\}}: Similar \texttt{InfiniteSource} but random byte value in payload.
       		\item \texttt{randomqueue.\{hh,cc\}}: Random Queue.
-      		\item \texttt{setvirtualclock.\{hh,cc\}}: Set Virtual Clock. It is used for GCRA and Virtual clock scheduler.
+      		\item \texttt{setvirtualclock.\{hh,cc\}}: Set virtual clock to timestamp of packet.
       		\item \texttt{wrrsched.\{hh,cc\}}: Weighted Round Robin Scheduling.
       		\item \texttt{wdrr.\{hh,cc\}}: Weighted Deficit Round Robin Scheduling.
-      	\end{itemize}
+      		\item \texttt{settimestamp2.\{hh,cc\}}: Similar to element \texttt{SetTimestamp} with an additional keyword "\texttt{ADD}".
+      		\item \texttt{checktimestamp.\{hh,cc\}}: Drop packets if its timestamp is expired.
+      		\item \texttt{eddsched.\{hh,cc\}}: Earliest Due Date (EDD) scheduling.
+      		\item \texttt{eddqueue.\{hh,cc\}}: EDD Queue, used in EDD scheduling.
+      		\item \texttt{shiftqueue.\{hh,cc\}}: Shift Queue, used in EDD scheduling.
+    		\end{itemize}
       	\item[plot-template/] This directory contains templates used for plotting data by \texttt{gnuplot}. These files are used by \texttt{draw-graph.sh}
-      	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory elements (above). For more information, type: \\
+      	\item[bin/update-elements.sh] Run this file to update the new elements implemented in directory \texttt{elements} (above). For more information, type: \\
       	\texttt{./update-elements.sh -h}
       	\item[bin/visual-clicky.sh]Shell script to visualize Click experiment using \texttt{clicky}. For more information, type: \\ 
       	\texttt{./visual-clicky.sh -h}
@@ -72,12 +78,12 @@ Network management and QoS provisioning Course}
       	\item[bin/eclick-compile.sh] Extend the Click file. A Click file can include another one to reuse some compound elements (similar \texttt{include} in C, or \texttt{import} in Java). File \texttt{eclick-compile.sh} is used to translate (or flatten) these extended-Click file to a normal Click file.
       	\item[bin/convert-click-dump.sh]This script is used to transform dump files from Click (binary files) into text files. Note: this is one-way transformation, the binary files cannot be recovered from the text files.
       	\item[bin/draw-graph.sh] This script is used to draw graphs from data extracted in Click dump files. Just provide the dump files, this script will generate a graph for you. Note: No need to use \texttt{convert-click-dump.sh} before using \texttt{draw-graph.sh}.
-      	\item[bin/draw-graph-negotiation.sh] Based on \texttt{draw-graph.sh}, this script helps to show the characteristics of verifying a conformance flow (which is a deal with \texttt{CIR, CBS, EBS}).
+      	\item[bin/draw-graph-negotiation.sh] Based on \texttt{draw-graph.sh}, this script helps to show the characteristics of verifying a conformant flow (which is a deal with \texttt{CIR, CBS, EBS}).
       	\item[clicky.ccss] File supporting Clicky Cascading Style Sheets. It controls the appearance of a clicky diagram with style sheets written in a CSS-like language.      	
       	\item[1-test-config/] This folder contains Click configurations for the first part of Click Lab: \texttt{Counter\_test}, \texttt{RandomQueue}, \texttt{RandInfiniteSource}, \texttt{Random\_IP\_generator}.
       	\item[2-tcp-udp-generation/] This folder contains Click configurations for the part of TCP/UDP generator.
       	\item[3-shaper-policer/] This folder contains Click configurations for the part of Shaper and Policer: uncontrolled flows, Leaky bucket, Token bucket, negotiation with \{CBS, EBS, CIR\}, GCRA.
-      	\item[4-scheduler/] This folder contains Click configurations for the part of Scheduler: FIFO, RR, DRR, WRR, WDRR, Virtual clock.
+      	\item[4-scheduler/] This folder contains Click configurations for the part of Scheduler: FIFO, RR, DRR, WRR, WDRR, Virtual clock, Weighted Fair Queueing, Earliest Due Date.
       	\item[5-congestion/] Click configurations for controlling congestion. At this time, there is only one Click configuration of WRED (Weighted-RED for two ranges of input bandwidth).
       \end{description}
     
@@ -108,15 +114,18 @@ Network management and QoS provisioning Course}
           \texttt{//\#include "CLICK\_FILE\_PATH"}\\
   where \texttt{CLICK\_FILE\_PATH} can be relative or absolute path. After that, you have to use our tool (\texttt{eclick-compile.sh}) to pre-compile this file before simulating it by Click, for example:\\
     \texttt{eclick-compile.sh -o extend-TCP\_UDP.click [-f] TCP\_UDP.click}\\
-Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the extended-Click file. It will do all automatically.
-        \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. Normally, we usually generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is to run this command:\\
+Note: if using tool \texttt{visual-clicky.sh}, you do not have to pre-compile the extended-Click file. It will do all automatically.
+        \item To visualize your packet stream at input or output, we have developed \texttt{draw-graph.sh} to generate graph as picture (using \texttt{gnuplot} that should be installed before). The second, you have to provide the data. We often generate data from Click with element \texttt{ToDump}. This data follows the tcpdump-like format. When you get the data, the last action you need is to run this command like in figure \ref{fig:draw-graph}.
+        \begin{figure}
 \texttt{draw-graph.sh -f dataIn.dump -f dataOut.dump \\
       $[$-o PNG\_FILES$]$\\
       $[$--plot-type COUNT (default) | RATE | DENSITY$]$\\
       $[$--xrange 233:23221$]$  $[$--yrange 282:2922$]$\\
       $[$--xlabel XYZ$]$  $[$--ylabel ABC$]$\\
       $[$--xcol 2$]$  $[$--ycol 1$]$}
-      
+      \caption[]{An example of using command \texttt{draw-graph.sh}}
+      \label{fig:draw-graph}
+      \end{figure} 
   After program \texttt{draw-graph.sh} finishes its work, it will create a picture file (PNG file). If user does not use output option (-o), this program will export to screen (using default output file \texttt{/dev/output}). You may want to change the plotting template by modify files in \texttt{plot-template} directory.
       \end{enumerate}
   \section{Test configuration}
@@ -128,10 +137,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	  \captionof{figure}{\texttt{Counter\_test} Click configuration}
 	  \label{fig:countertest}
   \end{center}
-  To avoid IP CRC checking, we temporarily disable CRC checking by using flag "\texttt{CHECKSUM false}" in \texttt{CheckIPHeader} element. Another solution is to use \texttt{SetIPChecksum} to repair CRC in generated IP packets. Since we can visualize the result by using \texttt{clicky} to replace steps that print out screen counting results from \texttt{Counter} elements. 
+  To avoid IP CRC checking, we temporarily disable CRC checking by using flag "\texttt{CHECKSUM false}" in \texttt{CheckIPHeader} element. Another solution is to use \texttt{SetIPChecksum} to repair CRC in generated IP packets. The result is visualized by \texttt{clicky}. 
   \subsection{\texttt{RandInfiniteSource} element}
   \textbf{Location:} \texttt{elements/randinfinitesource.*} \\
-  This element is implemented by modifying source of \texttt{InfiniteSource} element. Its function is similar to \texttt{InfiniteSource}, but by adding one more keyword (\texttt{RNDBYTEID}), generated packets may have random byte value at a specified position in payload. The idea of implementation is that before pushing out packets to the output port, packet payload is changed. Originally, data packet is already prepared one time by \texttt{setup\_packet} function before \texttt{InfiniteSource} releases packets. To make new element work, after modifying data, \texttt{setup\_packet} function should be called, otherwise generated packets do not change their content. Figure \ref{fig:test-randsource} shows the result of using \texttt{RandInfiniteSource} element to generate five packets with random value at the first byte.
+  This element is implemented by modifying source of \texttt{InfiniteSource} element. Its function is similar to \texttt{InfiniteSource}, one more keyword (\texttt{RNDBYTEID}) is added to generate packets having random byte value at a specified position in payload. The idea of implementation is that before pushing out packets to the output port, packet payload is changed. Originally, data packet is already prepared one time by \texttt{setup\_packet} function before \texttt{InfiniteSource} releases packets. To make new element work, after modifying data, \texttt{setup\_packet} function should be called, otherwise generated packets do not change their content. Figure \ref{fig:test-randsource} shows the result of using \texttt{RandInfiniteSource} element to generate five packets with random value at the first byte.
   \begin{center}
 	\includegraphics[width=0.9\textwidth]{test-randinfinitesource.png}
 	\captionof{figure}{Test \texttt{RandInfiniteSource} element with 5 packets and random at the first byte}
@@ -149,7 +158,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location:} \texttt{1-test-config/randomqueue.click} \\
   We have implemented two versions:
   \begin{itemize}
-  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasingly timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
+  	\item \texttt{BRandomQueue} (we call it Binary Random Queue): \texttt{MixedQueue} allows us to put packets in type of FIFO (input port 0) or LIFO (input port 1). Based on this function, input packets are put randomly (by \texttt{RandomSwitch} element) in either FIFO or LIFO input port. By this way, if queue size is $n$, there are $2^n^-^1$ possibilities created over total possibilities $(n!)$. %Technical issue: "When full, \texttt{MixedQueue} drops incoming FIFO packets, but drops the  oldest  packet to make room for incoming LIFO packets". It means that at that time, when observing at output, we only see packets with increasingly timestamp, no randomly. We resolve this problem by writing a script to drop LIFO packet when queue is full.
   	\item \texttt{2PRandomQueue} (Two Partition Random Queue): We expand the above idea with two queues and using Stride scheduler to join them to the output. Note that, dropped packets in the first queue are push to the second queue.
   \end{itemize}
   \begin{figure}[ht]
@@ -180,7 +189,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsubsection{Writing new element: \texttt{RandomQueue}}
   \textbf{Location:} \texttt{elements/randomqueue.*} \\
-  This element is inherited from \texttt{ThreadSafeQueue} class. We reuse all the source code but modifying the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping between the random packet and the first packet. Step by step in our algorithm as following:
+  This element is inherited from \texttt{ThreadSafeQueue} class. We reuse all the source code but modify the \texttt{pull} function to make it pull out packets randomly. Since queue data structure is not suitable for pulling out random packet (only good for the head and tail packets), we use a trick that swapping between the random packet and the first packet. Step by step in our algorithm as following:
   \begin{center}
 	\includegraphics[scale=0.80]{randomqueue-alg.pdf}
 	\captionof{figure}{Behavior of \texttt{RandomQueue} element}
@@ -192,7 +201,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   	\item Next, swapping the random packet and the first packet.
   	\item Last, pull out the first packet (but actually the random packet).
   \end{itemize}
-  Figure \ref{fig:test-randomqueue} shows the result of testing \texttt{RandomQueue} element. The eight-byte number in each line is the timestamp of packet. We can see that this value does not increasing but randomly. It means this element works well.
+  Figure \ref{fig:test-randomqueue} shows the result of testing \texttt{RandomQueue} element. The eight-byte number in each line is the timestamp of packet. We can see that this element works well.
   \begin{center}
 	\includegraphics[scale=0.70]{test-randomqueue.png}
 	\captionof{figure}{Test \texttt{RandomQueue} element}
@@ -210,7 +219,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
    	\item \texttt{Script}: we add some scripts to check states: 
        	\begin{itemize}
        		\item \texttt{autoupdate\_lostp\_estimation}: calculation of expected lost packets over input packets, based on bit error from \texttt{RandomBitError} and number of 'input' packets (\texttt{c1} in figure \ref{fig:randomipgenerator}).
-       		\item \texttt{autoupdate\_real\_bit\_error}: real bit error cbased on \texttt{c1, c2}. 
+       		\item \texttt{autoupdate\_real\_bit\_error}: real bit error based on \texttt{c1, c2}. 
        		\item \texttt{autoupdate\_lostp\_percent}: real lost packets over input packets based on \texttt{c1, c2}.
        	\end{itemize}
    \end{itemize} 
@@ -245,13 +254,13 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location:} \texttt{2-tcp-udp-generation/TCP\_UDP\_generator.click} \\
   We build this configuration as in figure \ref{fig:tcpudp}. TCP source is created with rate about 1000 packets per second (pps) while UDP packet rate is 1 pps. Both sources are connected to a Round Robin scheduler (\texttt{rrsched}). Script \texttt{autoupdate\_scale} is used to check online the ratio between number of TCP packets and number of UDP packets. We see that this generator works well when both queues are not full or speed of output link (\texttt{TimedSink}) is very fast. When queues are full, the expected ratio is not guaranteed. At our observation, we try to formalize the ratio as following:
   \begin{itemize}
-  	\item Let $r_{tcp}$, $r_{udp}$, $r$ are respectively the rate of TCP source, UDP source and output link. Let $ratio$ is the ratio between number of TCP packets over number of UDP packets at output link.
-  	\item Let $R = (r_{tcp} + r_{udp})$, and $m = \min(r_{tcp}, r_{udp})$.
+  	\item Let $r_{tcp}$, $r_{udp}$, $r$ are respectively the rate of TCP source, UDP source and output link. Let $ratio$ is the ratio between number of TCP packets over number of UDP packets at output link. Assume that $r_{tcp} > r_{udp}$.
+  	\item Let $R = (r_{tcp} + r_{udp})$.
   	\item If $r \ge R$: $ratio \to \frac{r_{tcp}}{r_{udp}}$
-  	\item If $r \le 2m$: $ratio \to 1$
-  	\item If $ 2m < r < R$: $ratio \to \frac{m}{r - m}$
+  	\item If $r \le 2*r_{udp}$: $ratio \to 1$
+  	\item If $ (2*r_{udp}) < r < R$: $ratio \to \frac{r - r_{udp}}{r_{udp}}$
   \end{itemize}
-  In general, we have a formular of ratio like: $ratio = \frac{m}{\min(R, \max(2m, r)) - m}$.
+  Generally, we have: $ratio = \frac{\min(R, \max(2*r_{udp}, r)) - r_{udp}}{r_{udp}}$, and $r_{tcp} > r_{udp}$.
     \begin{center}
 	  \includegraphics[scale=0.4]{TCP_UDP_generator.pdf}
 	  \captionof{figure}{\texttt{TCP\_UDP\_generator} configuration}
@@ -262,7 +271,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \subsection{Uncontrolled flow}
   \textbf{Location:} \texttt{3-shaper-policer/uncontrol-flow.click} \\
   We have tried some implementations of uncontrolled flow but the main idea is that the inter-time (interval) between two consecutive packets is a random
-  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use Script to change their rate or interval at a random values. We list here with a few lines of description of each implementation:
+  number. All implementations of uncontrolled flow are put in \texttt{3-shaper-policer/uncontrol-flow.click}. Normally, we use \texttt{RatedSource} or \texttt{TimedSource} to generate packets at a specific rate. After some time, we use element \texttt{Script} to change their rate or interval at a random values. We list here with a few lines of description of each implementation:
   \begin{itemize}
   	\item \texttt{UncontrolledFlow0}: We use two rated sources, one for generating regular rated source, one for generating burst. These sources are connected to a pull switch to choose from which source packets are generated. At any time generating packets, we choose a source to generate next packets through a script. 
   	\item \texttt{UncontrolledFlow1}: Only one source (\texttt{InfiniteSource}) is used and connected directly to the output. We used another two scripts named \texttt{change\_rate} and \texttt{autoupdate\_change\_burst} to change rate and burst duration at runtime.
@@ -293,7 +302,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   
   \subsection{Token bucket}
   \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
-  Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. But before implementing this element, there are some alternative implementations which are more complex:
+  Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. The issue in this configuration is that it does not allow burst at output but allow some burst at input. Before implementing this element, there are some alternative implementations which are more complex:
   \begin{itemize}
   	\item \texttt{RatedTokenBucketPolicer1}: We use a variable-size queue in this element. The size of queue is increased with the rate that is equal to the rate of token bucket. Each time a packet goes out of queue, size of queue is decreased one. To allow repeating burst at any periodic interval time, this element uses flag REPEATED.
   	\item \texttt{RatedTokenBucketPolicer2}: This element uses a sample source (same rate as token bucket, operating as a \textit{token generator}) and two counters counting the number of output packets ($CO$) and the number of generated token packets ($CT$). This element guarantees that at any time, \\ 
@@ -306,18 +315,24 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\label{fig:test-token}
   \end{center}
   
-  \begin{center}
-	\includegraphics[width=0.7\textwidth]{token-count.png}
-	\captionof{figure}{Number of packets at input (uncontrolled flow) and output of token policer and shaper}
-	\label{fig:test-tokenpolicer-graph}
-  \end{center} 
+  \begin{figure}
+      \centering
+      %\subfloat[\texttt{BRandomQueue}]{
+      \subfigure{
+      %\label{fig:test-lk-tk-count}
+      \includegraphics[width=0.7\textwidth]{lk-tk-count.png}}
+      \\(a) Number of packets over time
+      %\subfloat[\texttt{2PRandomQueue}]{
+      \subfigure{
+      %\label{fig:test-lk-tk-dense}
+      \includegraphics[width=0.7\textwidth]{lk-tk-dense.png}}
+      \\(b) Distribution of packet at output
+      
+      \caption{Test results of using leaky and token bucket to police and shape flows}
+      \label{fig:test-lk-tk}
+  \end{figure}
 
-  Figure \ref{fig:test-token-leaky-graph} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{BurstUncontrolledFlow}  (rate is 1 pps and maximum burst is 8) by a token and a leaky bucket policer. Token bucket policer is \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10), and leaky policer is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). We see that token policer can allow some burst duration but leaky policer limits it.
-  \begin{center}
-	\includegraphics[width=0.7\textwidth]{compare-lk-tk.png}
-	\captionof{figure}{Comparision of Token bucket and Leaky bucket}
-	\label{fig:test-token-leaky-graph}
-  \end{center} 
+  Figure \ref{fig:test-lk-tk} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{ProbUncontrolledFlow}  (maximum rate is 60 pps, probability of changing rate is 0.7) by token and leaky bucket. We test two configurations of token bucket: \texttt{RatedTokenBucketPolicer2} and \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10). Leaky bucket is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). All the shapers have buffer of 500 packets. From the result, figure \ref{fig:test-lk-tk}(a) shows the number of packets going out at output for each policers and shapers. Since all shapers work similarly in this case, we only plot \texttt{RatedTokenBucketShaper2}. We can see that two configurations of token bucket work similarly. But in figure \ref{fig:test-lk-tk}(b), wee see the differences between them when looking at the distribution of output packets over time.
   
   \subsection{Negotiation (CIR, CBS, EBS)}
   \textbf{Location:} \texttt{3-shaper-policer/negotiation.click} \\
@@ -337,7 +352,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\captionof{figure}{Implementation of \texttt{RatedNegotiablePolicer4}}
 	\label{fig:negotiation4}
   \end{center}
-  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-test}. The red line (\texttt{dumpin2}) is representation of input flow. The green line (\texttt{dumpout2}) is represented to \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4} (\texttt{dumpout4}). We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets following the rules of negotiation, but line of (\texttt{dumpout4}) is a little higher than line of (\texttt{dumpout2}).
+  We test \texttt{RatedNegotiablePolicer2} and \texttt{RatedNegotiablePolicer4} with an uncontrolled input source, maximum rate 500 pps. The negotiation is: CBS = 50, EBS = 10 and CIR = 100 (pps). Results are shown in figure \ref{fig:negotiation-test}. The red line (\texttt{dumpin2}) is representation of input flow. The green line (\texttt{dumpout2}) is represented to \texttt{RatedNegotiablePolicer2} and the other line of \texttt{RatedNegotiablePolicer4} (\texttt{dumpout4}). We can see that the number of output packets, in a window time $T = 0.5s$, is trimmed at 60 packets following the rules of negotiation, but line \texttt{dumpout4} is a little higher than line \texttt{dumpout2}.
     \begin{figure}
     \centering
     \subfloat[Number of packets in a time interval $T=\frac{CBS}{CIR}=0.5s$]{
@@ -373,7 +388,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   There are two ways of building FIFO scheduler. The first and simple way is to use \texttt{ThreadSafeQueue} element. All inputs are connected into input of queue and output of queue is connected to output of FIFO scheduler. The second way is to use \texttt{TimeSortedSched} element to which all inputs connect through queues. We test our FIFO scheduler with three flows and their rate respectively 1 pps, 3 pps, 6 pps. FIFO scheduler only processes 1 pps. Figure \ref{fig:test-fifo} shows the result that the high rate flow (blue color - out2) makes a huge effect on the output link.
   \begin{center}
 	\includegraphics[height=0.3\textheight, width=0.70\textwidth]{fifo-dense.png}
-	\captionof{figure}{Testing \texttt{FIFOSched} configuration}
+	\captionof{figure}{Testing \texttt{FIFOSched} configuration: distribution of packet at output over time}
 	\label{fig:test-fifo}
   \end{center}
   
@@ -382,7 +397,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   Round Robin Scheduler is a built-in element in Click. We test this scheduler with the same scenario as described in testing FIFO scheduler. Although the inputs have diffirent rates, the output link is shared fairly to all three flows (figure \ref{fig:test-rr}) but it does not take care of packet's length.
   \begin{center}
 	\includegraphics[height=0.3\textheight, width=0.70\textwidth]{rr-dense.png}
-	\captionof{figure}{Testing \texttt{RRSched} configuration}
+	\captionof{figure}{Testing \texttt{RRSched} configuration: distribution of packet at output over time}
 	\label{fig:test-rr}
   \end{center}
   
@@ -391,7 +406,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   Deficit Round Robin (DRR) Scheduler is a built-in element in Click. We also test DRR scheduler with three flows, but the size of packets in each flow are 500, 1000 and 1500 bytes respectively. The result in figure \ref{fig:test-drr} shows that DRR scheduler guarantee bandwidth provided to each flow. The small-packet size flow is scheduled more times than other flows. When working with DRR scheduler and checking its source code, we know that the quantum byte is 500. It means for each round, deficit of each flow is increased 500. If we setup flows with too small in packet length, those flows will send out a lot of packets before next flows are scheduled to send packets. Or in contrast, flows having large size packets will wait for a long time before sending out packets.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{drr-dense.png}
-	\captionof{figure}{Testing \texttt{DRRSched} configuration}
+	\captionof{figure}{Testing \texttt{DRRSched} configuration: distribution of packet at output over time}
 	\label{fig:test-drr}
   \end{center}
   
@@ -399,7 +414,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   We implement this scheduler in two versions. The first is compound element that based on Round Robin scheduler. The second is a new element.
   \subsubsection{WRR scheduler - compound element}
   \textbf{Location}: \texttt{4-scheduler/WRR\_Sched.click}\\  
-  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. Figure \ref{fig:wrr-compound} is an example of WRR with two weights: 1 and 2. Source \texttt{s0} has weight 1 and connect to port 1 of \texttt{rrsched}. Source \texttt{s1}, weight 2, is provided two input ports (0 and 2) of \texttt{rrsched}. In practice, we need to take care of distribution of ports to have the fairness in response time. Besides, this approach also loses the sequence of packets in each flow. We build another WRR scheduler supporting three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound} which presents the timestamp of packets at output link.
+  This scheduler is based on Round Robin scheduler. The main idea is that: weight of each flow is scaled to number of ports assigned to that flow. A high weight flow will have more input ports of Round Robin scheduler. Figure \ref{fig:wrr-compound} is an example of WRR with two weights: 1 and 2. Source \texttt{s0} has weight 1 and connect to port 1 of \texttt{rrsched}. Source \texttt{s1}, weight 2, is provided two input ports (0 and 2) of \texttt{rrsched}. In practice, we need to take care of distribution of ports to have the fairness in response time. Besides, this approach also loses the sequence of packets in each flow. To test this idea, we build another WRR scheduler supporting three input flows with weight 1, 2 and 3 respectively. The result is shown in figure \ref{fig:test-wrr-compound} which presents the timestamp of packets at output link.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{2wrr.pdf}
 	\captionof{figure}{Configuration of \texttt{WRRSched} compound element with two input flows and weight 1, 2}
@@ -408,7 +423,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wrr2-dense.png}
-	\captionof{figure}{Testing \texttt{WRRSched} compound element}
+	\captionof{figure}{Testing \texttt{WRRSched} compound element: distribution of packet at output over time}
 	\label{fig:test-wrr-compound}
   \end{center}
   
@@ -416,10 +431,10 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   \textbf{Location}: \\
   \texttt{elements/wrrsched.\{cc,hh\}} \\ 
   \texttt{4-scheduler/WRR\_Sched\_element.click}\\
-  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps (virtual input ports), and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. WRR in our implementation is the RR scheduling on virtual ports. We test this new element of WRR with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
+  Since WRR compound element is not easy to deal with big weight although only a few number of inputs, we developed a new element for WRR scheduler. Another good point of this element, compared with the above compound element, is that it guarantees the sequence of packets in each flow. $N$ is number of input, $w_i$ is weight of $i$-th input, $W$ is total of weights. At initial time, this element will create a list of visited ports in period of $W$ steps (virtual input ports), and try to make fairness in response time. After finishing to process a packet at one port, it will process packet of next port in the list created in initial time. WRR in our implementation can be seen as the RR scheduling on virtual ports. We test this new element of WRR with three flows, weights are 1, 2 and 3. The result is shown in figure \ref{fig:test-wrr}.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wrr-dense.png}
-	\captionof{figure}{Testing \texttt{WRRSched} element}
+	\captionof{figure}{Testing \texttt{WRRSched} element: distribution of packet at output over time}
 	\label{fig:test-wrr}
   \end{center}
 
@@ -430,7 +445,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   The way of implementation is the same as WRR scheduler (compound element), that is to provide more input ports of Deficit Round Robin scheduler to the high weight input flows. Figure \ref{fig:test-wdrr-compound} shows the distribution of packets of each flow on the output link. We setup three flows with packet length 500, 1000, 1500 byte, and weights 1, 2, 3 respectively. We can see that a number of packets of each flows is nearly the same as we expect.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wdrr-dense-compound.png}
-	\captionof{figure}{Testing \texttt{WDRRSched} compound element}
+	\captionof{figure}{Testing \texttt{WDRRSched} compound element: distribution of packet at output over time}
 	\label{fig:test-wdrr-compound}
   \end{center}
 
@@ -451,7 +466,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   We test this element with three flows. Flow0 has 100 byte of packet length, weight $0.2$. Flow1 has 200 byte of packet length, weight $0.4$. Flow2 has 400 byte of packet length, weight $0.8$. We use small weights because packet length in these flows is smaller than quantum value (500) and we do not want burst duration on the output link. Output flow is shown in Figure \ref{fig:test-wdrr-element}. We can see that with these parameters, WDRR scheduler operates like a Round Robin scheduler.
   \begin{center}
 	\includegraphics[width=0.70\textwidth]{wdrr-dense-element.png}
-	\captionof{figure}{Testing \texttt{WDRRSched} element}
+	\captionof{figure}{Testing \texttt{WDRRSched} element: distribution of packet at output over time}
 	\label{fig:test-wdrr-element}
   \end{center}
   
@@ -475,7 +490,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   V(0) &= 0 \\
   \frac{\partial V}{\partial \tau} &= \frac{1}{\sum r_j} \\
   \end{align*}
-  To use this element, user needs to provide: $rate$ (bandwidth of a flow), $max\_bw$ (maximum bandwidth of output link), $current\_bw$ (current used bandwidth of output link). At runtime, this element allows user to read $last\_tag$ and also modify $rate$, $max\_bw$, $current\_bw$. When a packet arrives to this element, it does the following tasks:
+  To use this element, user needs to provide: $rate$ (bandwidth of a flow), $max\_bw$ (maximum bandwidth of output link) and $current\_bw$ (current used bandwidth of output link). At runtime, this element allows user to read $last\_tag$ and also modify $rate$, $max\_bw$, $current\_bw$. When a packet arrives to this element, it does the following tasks:
   \begin{itemize}
   	\item Update virtual time: 
   	\begin{align*}last\_virtual\_time += \frac{(current\_real\_time - last\_real\_time)*max\_bw}{current\_bw}\end{align*}
@@ -485,7 +500,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   	\item Update parameter of \texttt{SetVirtualClock}: $last\_real\_time$ to the current time.  	
   \end{itemize}
   Note: when configuring \texttt{SetVirtualClock} with $max\_bw = current\_bw$, the virtual time is exactly the real time. We can use this property to implement GCRA and Virtual Clock scheduling.
-  \subsection{Virtual Clock scheduler}
+  \subsection{Virtual Clock scheduler} \label{section:vcsched}
   \textbf{Location}: \texttt{4-scheduler/VC\_Sched.click}\\
   We implement the Virtual clock scheduler with support of \texttt{SetVirtualClock}. Each flow is connected to a \texttt{SetVirtualClock} and then to a \texttt{TimeSortedSched} (Figure \ref{fig:vcsched}). Element \texttt{SetVirtualClock} is set up with $MAXBW = CURRENTBW$. With this configuration, packets out of \texttt{SetVirtualClock} will have a new timestamp following the rule of Virtual Clock scheduling. At that time, packets will go through element \texttt{TimeSortedSched} which is a scheduler based on timestamp of packets.
 
@@ -510,22 +525,173 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
 	\label{fig:test-vcs1}
   \end{center}
   
-  %\subsection{Weighted Fair Queue scheduler}
+  \subsection{Weighted Fair Queueing (WFQ) scheduler}
+  \textbf{Location}: \texttt{4-scheduler/WFQ\_Sched.click}\\
+  Figure \ref{fig:wfq} shows the Click configuration of WFQ with three input flows. We also use a \texttt{SetVirtualClock} for each flows before letting them go through the \texttt{TimeSortedSched}. The problem in WFQ scheduling is that we need to take care of input flows to know which one is active. We use \texttt{UpdateCurrentBW} and \texttt{Counter}s to do this job. Assume that packet rate of input flows is larger than 1 (at least 1 pps). \texttt{Counter} is used to know whether the appropriate input flow is active or not in the last second. These \texttt{Counter}s are reset to 0 each second. Based on information from \texttt{Counter}, script \texttt{UpdateCurrentBW} will adjust parameter \texttt{currentbw} of each element \texttt{SetVirtualClock} to the sum of bandwidth of current active flows.
+  \begin{center}
+	\includegraphics[width=0.50\textwidth]{wfq.pdf}
+	\captionof{figure}{\texttt{Weighted Fair Queueing} scheduler with 3 flows}
+	\label{fig:wfq}
+  \end{center}
+Testing scenario: three flows have the same packet rate 1 pps, and packet length 3 byte. Flow 0 and flow 1 are started at the same time, flow 2 is started 15 seconds later. Output packet rate is 1 pps. Figure \ref{fig:test-wfq} shows the output packets whose color is representation of flows. We see that flow 0 and flow 1 are not lost bandwidth when flow 2 starts. 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{wfq-dense.png}
+	\captionof{figure}{Testing \texttt{Weighted Fair Queueing} scheduler with 3 flows}
+	\label{fig:test-wfq}
+  \end{center}
+  
+We use the same scenario to Virtual Clock scheduler (section \ref{section:vcsched}), and result is shown in figure \ref{fig:test-vcs2}. Since Virtual Clock scheduler always assumes that all flows are active, it is not good when a flow is started long time after other flows. 
+  \begin{center}
+	\includegraphics[width=0.80\textwidth]{vcs2-dense.png}
+	\captionof{figure}{Testing \texttt{Virtual Clock} scheduler with the same scenario of WFQ scheduler}
+	\label{fig:test-vcs2}
+  \end{center}
+  
+  \subsection{Earliest Due Date(EDD) scheduler}
+  \textbf{Location}: \\
+  \texttt{4-scheduler/EDD\_Sched.click}\\
+  \texttt{elements/eddsched.\{hh,cc\}}\\
+  \texttt{elements/eddqueue.\{hh,cc\}}\\
+  \texttt{elements/shiftqueue.\{hh,cc\}}\\
+  To implement EDD scheduler, there are two interesting problems:
+  \begin{itemize}
+  	\item \textbf{Assigning deadline}. There are two algorithms: Delay EDD and Jitter EDD. Since time is limited, we do not implement this function.
+  	\item \textbf{Deadline guarantee}. Beside implementing the basic function of EDD scheduler that the smallest deadline packet goes first and drop expired deadline packet at output, we see that if we can estimate the time that a packet is chosen by EDD scheduler before puting it into waiting queue, we can do better for the future packets. Although queue still has some empty space, but we know that a new packet will be dropped at the time chosen by scheduler, we should drop it right now and hold an empty space for others.
+  \end{itemize}
+  Assume that all flows of packet come to EDD scheduler with assigned deadlines. We consider two ways of storing deadline value: in timestamp annotation or in payload of packet. The first way may be suitable to Delay EDD and Jitter EDD. The second way can be applied to all cases generally. Some additional elements are implemented to do store deadline and do EDD algorithm:
+  \begin{itemize}
+  	\item Element \texttt{SetTimestamp2}: it is inheritted from element \texttt{SetTimestamp} but user can use additional keyword \texttt{ADD} to define the expected deadline by changing timestamp annotation of packet. This element is also used to store deadline in payload of packet by combining it and element \texttt{StoreTimestamp}. See figure \ref{fig:setdeadline}.
+        \begin{center}
+	      \includegraphics[width=0.70\textwidth]{setdeadline.pdf}
+	      \captionof{figure}{Element \texttt{SetTimestamp2} and \texttt{StoreTimestamp} are used to store deadline in Timestamp annotation or payload}
+	      \label{fig:setdeadline}
+        \end{center}
+
+  	\item Element \texttt{CheckTimestamp}: this element drops packets if it is late (its timestamp annotation is in the past).
+  	\item Element \texttt{EDDSched}: EDD scheduler. This scheduler only does the basic function: choose next packet with the minimum deadline. If packet is late, it is killed or dropped. This element can check packet's deadline which is in the timestamp annotation or in the head of payload (the first eight bytes).
+  	\item Element \texttt{EDDQueue}: This queue is \texttt{ThreadSafeQueue} with additional function: A packet is pushed successfully to this queue only if
+  	\begin{align*}
+  	(Packet\_Deadline - Current\_time) * Average\_output\_rate > Current\_queue\_length
+  	\end{align*}
+  	\item Element \texttt{ShiftQueue}: This queue is \texttt{SimpleQueue} with additional function: If queue is full, packets in queue will be remove if they could be expired in future. More detail is in section \ref{section:shiftqueue}. 
+  \end{itemize}
+  
+  \subsubsection{EDD scheduler with basic functions} \label{section:eddbasic}
+  After assigning deadline to packet, the EDD scheduler operates similar to a FIFO scheduler. For that reason, EDD scheduler is a "FIFO scheduler" with dropping expired packets. Figure \ref{fig:eddsched01} shows two configurations of EDD scheduler with one thing difference: in the right figure, by using element \texttt{EDDSched}, if packet misses its deadline, the scheduler will drop it and find another packets immediately (no need to run another round). If EDD scheduler is implemented by compound element (\texttt{\_edds0}), expired packet is checked in \texttt{CheckTimestamp} after the scheduler chooses it, so it needs to request the scheduler again (one more round) to choose another one. The performance of \texttt{\_edds1} should be better than \texttt{\_edds0} in the cases of many expired packets.
+  
+        \begin{center}
+	      \includegraphics[width=0.8\textwidth]{eddsched01.pdf}
+	      \captionof{figure}{Two configurations of EDD Scheduler with basic function}
+	      \label{fig:eddsched01}
+        \end{center}
+        
+        Scenario of testing: there are two flows \texttt{RatedSource} with the same rate (100 pps). The deadline of the first flow is 6 seconds, and deadline of the second flow is 8 second. The output rate is 20 pps. These configured parameters are based on these constraints:
+        \begin{align}
+          d_1 &> d_0 \\
+         	d_0 &> \frac{R_i}{R_o}\\
+         	d_1 &< \frac{(d_1 - d_0)*R_i}{R_o} \\
+         	d_1 &< \frac{d_0*R_i}{R_o}
+        \end{align} 
+      	where $d_i$ is the deadline of flow $i$, $R_i$ is the input rate, $R_o$ is the output rate.
+        We try to create a scenario in which one flow dominates others which is described in these above inequations. At the beginning, we setup a large capacity of the queues storing packets from these flows. We observe that this capacity is about $FLOW\_RATE * DEADLINE \to 100*8 = 800$. Value $DEADLINE$ is the maximum time a packet staying in queue before being processed. The result is shown in figure \ref{fig:test-edd-ideal}. \\
+        \begin{figure}
+          \centering
+          \subfloat[Number of packets over time]{
+            \includegraphics[width=0.5\textwidth]{edds11-count.png}
+	          \label{fig:test-edd-ideal-count}}
+          \subfloat[Distribution of packets of each flow at output over time]{
+            \includegraphics[width=0.5\textwidth]{edds11.png}
+	          \label{fig:test-edd-ideal-dense}}	          
+	          \caption{Testing results when using large size queues with EDDSched compound element \texttt{\_EDDSched1}: flow 0 is represented by \texttt{out01b}, flow 1 is represented by \texttt{out11b}}
+	          \label{fig:test-edd-ideal}
+        \end{figure}
+        We do another test with one thing changed: queue size for each flow is reduced to $OUTPUT\_RATE * DEADLINE * 2 + 5$. The reason is that the time of scheduling all packets in a queue should be smaller than or equal to the deadline value. Queue size for the first flow is 245 and for the second flow is 325. The result of this test is shown in figure \ref{fig:test-edd1}.
+        \begin{figure}
+          \subfloat[Number of packets over time]{
+          \centering
+            \includegraphics[width=0.5\textwidth]{edds1-count.png}
+	          \label{fig:test-edd1-count}}
+          \subfloat[Distribution of packets of each flow at output over time]{
+            \includegraphics[width=0.5\textwidth]{edds1.png}
+	          \label{fig:test-edd1-dense}}	          
+	          \caption{Testing results when using limitted-size queues with EDDSched compound element \texttt{\_EDDSched1}: flow 0 is represented by \texttt{out01}, flow 1 is represented by \texttt{out11}}
+	          \label{fig:test-edd1}
+        \end{figure}
+        We see that, when queue size is reduced, the EDD scheduler treat not fair to large deadline flow. The reasons could be: 
+        \begin{itemize}
+        	\item New packets are refused because of full queue while some packets in queue are too old and will be killed when scheduled.
+        	\item Life time (deadline) of packets is damaged by small deadline flow.  
+        \end{itemize}
+  The second reason is difficult to deal with because it is from EDD scheduler. We try to improve EDD scheduler to get back some bandwidth from flow 0 to flow 1 by dealing with the first reason. The idea of solution is to remove packets that we know or be sure that they will be expired. The next two subsections will try to improve the fairness in the case of limitted size queue so that it could operate as well as the case of large size queue (figure \ref{fig:test-edd-ideal}). Assume that we know the output packet rate, input packet rate, and there is only two input flows. 
+        
+  \subsubsection{Improving EDD scheduler with dropping policy at inputs}
+
+  \begin{center}
+	  \includegraphics[width=0.9\textwidth]{edds2.pdf}
+	  \captionof{figure}{EDD Scheduler with improvement \texttt{\_EDDSched2}}
+	  \label{fig:edds2}
+    \end{center}
+
+  Figure \ref{fig:edds2} shows the Click configuration of improved EDD scheduler with this dropping policy that does not always allow packets stored in queue (\texttt{DeadlineQueue}). Element \texttt{ShouldDrop} makes the decision of dropping packets: packet is dropped if \begin{align*}\alpha * OUTPUT\_RATE * DEADLINE < GlobalQueue.length + DeadlineQueue.length\end{align*}
+  	Parameter $\alpha$ can be configured by user. Normally, we set $\alpha = 1.7$. Since some packets in \texttt{GlobalQueue} can be expired, we use parameter $\alpha$ to control this event. \texttt{GlobalQueue}, an instance of element \texttt{EDDQueue}, denies all packets that will be expired in the future if:
+  	\begin{align*}OUTPUT\_RATE * (PACKET\_DEADLINE - CURRENT\_TIME) < EDDQUEUE\_LENGTH\end{align*}
+    We test this configuration with the same parameters as in the second test in section \ref{section:eddbasic}. In figure \ref{fig:test-edd2}, the result shows that flow 1 has more chance to send out packets with this improvement. Note that queue size is limited.
+    
+    \begin{figure}
+      \centering
+      \subfloat[Number of packets over time]{
+        \includegraphics[width=0.5\textwidth]{edds2-count.png}
+        \label{fig:test-edd2-count}}
+      \subfloat[Distribution of packets of each flow at output over time]{
+        \includegraphics[width=0.5\textwidth]{edds2.png}
+        \label{fig:test-edd2-dense}}	          
+        \caption{Testing results when improving EDD scheduler with dropping policy: flow 0 is represented by \texttt{out02}, flow 1 is represented by \texttt{out12}}
+        \label{fig:test-edd2}
+    \end{figure}
+  
+  \subsubsection{Improving EDD scheduler with \texttt{ShiftQueue}} \label{section:shiftqueue}
+
+  \begin{center}
+	  \includegraphics[width=0.5\textwidth]{edds3.pdf}
+	  \captionof{figure}{EDD Scheduler with improvement \texttt{\_EDDSched3}}
+	  \label{fig:edds3}
+    \end{center}
+
+  When observing operation of EDD scheduler, we see that in the high deadline queue, sometimes most packets are expired or will be expired when scheduled. But at that time, queue is full, new packets which could be scheduled, can not enter to it and be dropped. When this queue is scheduled, all expired packets are removed and new packets comes but with high deadline and continue to wait for their turn. We have rebuilt the \texttt{SimpleQueue} to \texttt{ShiftQueue} to avoid this phenomenon by allowing to remove old packets when queue is full. We do not check residual time of packets everytime because of performance. When a packet is pushed to \texttt{ShiftQueue}:
+  \begin{itemize}
+  	\item If queue is not full, packet is stored in queue normally.
+  	\item If queue is full: remove packet by packet from tail of queue if 
+  	\begin{align*} OUTPUT\_RATE * (PACKET\_DEADLINE - CURRENT\_TIME) < EDDQUEUE\_LENGTH \end{align*}
+  	\item After cleaning queue and having some free space, new packet is added to queue. Otherwise, it is dropped.
+  \end{itemize}
+  Figure \ref{fig:edds3} is the configuration using this \texttt{ShiftQueue}. We also use the same second scenario in the section \ref{section:eddbasic} to test this configuration. In figure \ref{fig:test-edd3}, we see that the fairness is comparable to the case of large size queue. 
+    \begin{figure}
+      \centering
+      \subfloat[Number of packets over time]{
+        \includegraphics[width=0.5\textwidth]{edds3-count.png}
+        \label{fig:test-edd3-count}}
+      \subfloat[Distribution of packets of each flow at output over time]{
+        \includegraphics[width=0.5\textwidth]{edds3.png}
+        \label{fig:test-edd3-dense}}
+        \caption{Testing results when improving EDD Scheduling with \texttt{ShiftQueue}: flow 0 is represented by \texttt{out03}, flow 1 is represented by \texttt{out13}}
+        \label{fig:test-edd3}
+    \end{figure}
+  
   \section{Congestion control}
   \subsection{Weighted RED buffer management}
-  We want to build a Weighted RED (WRED) based on RED element. A WRED allows us to define some ranges of bandwidth, each range has a particular probability of dropping packets. The idea of implementation: Packets are classified by their rate (or a range of rate), and then let them go through a RED element used for this rate. We check this idea by writing a WRED that support two ranges of rate, see figure \ref{fig:wred2}.
+  We want to build a Weighted RED (WRED) based on RED element. A WRED allows us to define some ranges of bandwidth, each range has a particular probability of dropping packets. The idea of implementation: Packets are classified by their rate (or a range of rate), and then let them go through a RED element used for this rate. We check this idea by writing a WRED that supports two ranges of rate, see figure \ref{fig:wred2}.
     \begin{center}
 	  \includegraphics[scale=0.5]{wred2.pdf}
 	  \captionof{figure}{One simple implementation of \texttt{WRED} element}
 	  \label{fig:wred2}
     \end{center}
-  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropping packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that observation, our strategy is to estimate probability of dropped packets as following:
+  To test new element of WRED, we calculate probability of dropping packets by fraction of number of dropped packets over number of packets in a particular range of rate. Since RED element accumulates dropped packets over time, we have to use another counter to count number of dropped packets (be able to reset this counter for another average queue size). When observing the operations of RED element, we recognize that with a particular output link speed, the average queue size goes to a stable value. From that, our testing strategy is to estimate probability of dropped packets as following:
   \begin{itemize}
   	\item Output link speed begins with input link speed.
   	\item Reset all counters: number of input packets, number of dropped packets
   	\item Restart input source, wait for stable average queue size (we let it wait for 10 second).
   	\item Stop source, and then calculate probability of dropped packets.
-  	\item Print to log file information of this probability and average queue size.
+  	\item Print to log file information of this probability and average queue size (getting from element \texttt{RED}).
   	\item Change output link speed to another value and return to step 2.
   \end{itemize}
   For testing, we set up two RED elements with parameters:
@@ -533,7 +699,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you don't have to pre-compile the
   	\item RED 1: $MIN\_THRESH = 40, MAX\_THRESH = 80, MAX\_P = 0.4$ for a range of input bandwidth $0.2KBps \to 12KBps$.
   	\item RED 2: $MIN\_THRESH = 50, MAX\_THRESH = 80, MAX\_P = 0.3$ for a range of input bandwidth $12KBps \to \infty$.
   \end{itemize}
-  Result of testing is shown in figure \ref{fig:test-wred2} (lines are smooth using \texttt{sbezier}).
+  Testing result is shown in figure \ref{fig:test-wred2} (lines are smooth using \texttt{sbezier}).
   \begin{center}
 	\includegraphics[width=0.80\textwidth]{wred2.png}
 	\captionof{figure}{Testing \texttt{WRED2}}

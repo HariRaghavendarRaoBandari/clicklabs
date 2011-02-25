@@ -57,6 +57,7 @@ static inline void init_porders (int * porders, int n) {
           porders[i] = -1; 
 }
 
+/*
 static int find_max(int * array, int len) {
   int max = 0;
   for (int i = 0; i < len; i++) {
@@ -65,6 +66,7 @@ static int find_max(int * array, int len) {
   }
   return max;
 }
+*/
 
 int
 WRRSched::configure(Vector<String> &conf, ErrorHandler *errh)

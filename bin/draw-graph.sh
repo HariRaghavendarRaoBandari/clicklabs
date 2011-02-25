@@ -209,17 +209,17 @@ find_value_y () {
   done < $datafile
 } 
 
-find_maxmin_x () {
-  local maxx=0
+find_minmin_x () {
+  local minx=9999999999
   for f in $DATA; do
     local tmpx=""
     tmpx=`cat $f | head -1 | awk '{print $2}'`
-    local check=`echo "$maxx < $tmpx" |bc`
+    local check=`echo "$minx > $tmpx" |bc`
     if [ $check -eq 1 ]; then
-      maxx=$tmpx
+      minx=$tmpx
     fi
   done
-  echo $maxx
+  echo $minx
 }
 
 #Update XRANGE to PLOTSCRIPT
@@ -230,12 +230,12 @@ if [ "$XRANGE" == "" ]; then
   cat /tmp/tmpfile > $PLOTSCRIPT
 else
   touch /tmp/tmpfile
-  maxminx=`find_maxmin_x`
+  minminx=`find_minmin_x`
   x1=`echo $XRANGE | awk -F : '{printf "%.6f", $1}'`
   x2=`echo $XRANGE | awk -F : '{printf "%.6f", $2}'`
   #if [ `echo "$x1 == 0" | bc` -eq 1 ]; then
-  x1=`echo $x1 $maxminx | awk '{printf "%.6f", $1+$2}'`
-  x2=`echo $x2 $maxminx | awk '{printf "%.6f", $1+$2}'`
+  x1=`echo $x1 $minminx | awk '{printf "%.6f", $1+$2}'`
+  x2=`echo $x2 $minminx | awk '{printf "%.6f", $1+$2}'`
   XRANGE="$x1:$x2"
   #fi
   cat $PLOTSCRIPT | sed -e s/XRANGE/${XRANGE}/g > /tmp/tmpfile

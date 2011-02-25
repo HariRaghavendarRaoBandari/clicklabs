@@ -124,7 +124,7 @@ elementclass RatedTokenBucketShaper1 {
     -> q::Queue($size)
     //-> shaper::RatedUnqueue(RATE $rate)
     -> shaper::Shaper(RATE $rate)
-    -> Unqueue(BURST $burst)
+    -> TimedUnqueue(INTERVAL $interval, BURST $burst)
     -> policer
     -> output;
 }
@@ -158,13 +158,14 @@ elementclass RatedTokenBucketPolicer2 {
 }
 
 elementclass RatedTokenBucketShaper2 {
-  SIZE $size, RATE $rate, BURST $burst|
+  SIZE $size, RATE $rate, INTERVAL $t,  BURST $burst|
 
+  
   policer::RatedTokenBucketPolicer2(RATE $rate, BURST $burst);
   input
     -> q::Queue($size)
     -> shaper::Shaper(RATE $rate)
-    -> Unqueue(BURST $burst)
+    -> tu::TimedUnqueue($t, $burst)
     -> policer
     -> output;
 }
@@ -190,7 +191,7 @@ elementclass RatedTokenBucketShaper3 {
   input
     -> q::Queue($size)
     -> shaper::Shaper(RATE $rate)
-    -> Unqueue(BURST $burst)
+    -> tu::TimedUnqueue($t, $burst)
     -> policer
     -> output;
 }
