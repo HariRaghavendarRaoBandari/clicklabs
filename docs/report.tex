@@ -301,6 +301,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you do not have to pre-compile th
   \end{center} 
   
   \subsection{Token bucket}
+  \subsubsection{Token bucket - compound elements}
   \textbf{Location:} \texttt{3-shaper-policer/token-bucket.click} \\
   Token bucket is designed similar to leaky bucket but expand the size of queue as a number of burst duration, see \texttt{RatedTokenBucketPolicer3} in figure \ref{fig:test-token}. The issue in this configuration is that it does not allow burst at output but allow some burst at input. Before implementing this element, there are some alternative implementations which are more complex:
   \begin{itemize}
@@ -333,7 +334,22 @@ Note: if using tool \texttt{visual-clicky.sh}, you do not have to pre-compile th
   \end{figure}
 
   Figure \ref{fig:test-lk-tk} does a comparison of token and leaky bucket. The scenario is: we try to regulate a \texttt{ProbUncontrolledFlow}  (maximum rate is 60 pps, probability of changing rate is 0.7) by token and leaky bucket. We test two configurations of token bucket: \texttt{RatedTokenBucketPolicer2} and \texttt{RatedTokenBucketPolicer3} (rate is 10 pps, burst is 10). Leaky bucket is \texttt{RatedLeakyBucketPolicer} (rate is 10 pps). All the shapers have buffer of 500 packets. From the result, figure \ref{fig:test-lk-tk}(a) shows the number of packets going out at output for each policers and shapers. Since all shapers work similarly in this case, we only plot \texttt{RatedTokenBucketShaper2}. We can see that two configurations of token bucket work similarly. But in figure \ref{fig:test-lk-tk}(b), wee see the differences between them when looking at the distribution of output packets over time.
-  
+  \subsubsection{Token bucket - new element}
+  We implement Click element \texttt{RatedToken} to verify flow by using Token Bucket Algorithm, and each token allows one packet go through. This element needs two parameters BURST (number of packets) and RATE (packets per second). When this element is initialized, it also determines the start time of generating tokens. To control current number of generated token, we use a timestamp $fulltk\_tv$ (to know the last time of maximizing generated tokens) and $cburst$ (to determine how many packets are accepted). At any time, we can compute the number of generated tokens as:
+  \begin{align*}ntokens = \max\{BURST; cburst + (now - fulltk\_tv)*RATE\}\end{align*}
+  If $ntokens$ is larger than 0, then let packet go through, else drop it or push it out to port 1. Note that, $fulltk\_tv$ and $cburst$ must be updated when $notkens$ equals $BURST$. We test \texttt{RatedToken} with the same scenario in the last section of compound element of token bucket. The result is shown in figure \ref{fig:test-tk-element}.
+  \begin{figure}
+      \centering
+      \subfloat{
+      \label{Number of packets over time}
+      \includegraphics[width=0.5\textwidth]{tke-count.png}}
+      \subfloat{
+      \label{Distribution of packet at output}
+      \includegraphics[width=0.5\textwidth]{tke-dense.png}}      
+      \caption{Test results of using \texttt{RatedToken} and \texttt{RatedTokenBucketPolicer2}}
+      \label{fig:test-tk-element}
+  \end{figure}
+
   \subsection{Negotiation (CIR, CBS, EBS)}
   \textbf{Location:} \texttt{3-shaper-policer/negotiation.click} \\
   Figure \ref{fig:negotiation2} shows one implementation of negotiation (\texttt{RatedNegotiablePolicer2}). The idea is: input packets are gone through \texttt{RatedLeakyBucketShaper} (with leaky rate $R_L = \frac{CIR * (CBS + EBS)}{CBS}$) and then gone through \texttt{RatedTokenBucketShaper2} (with token rate $R_T = CIR$ and burst duration is $EBS$). At output, we guarantee that in interval time $T = \frac{CBS}{CIR}$, maximum number of output packets is $(CBS + EBS)$ and flow is shapped to rate $CIR$ with a maximum burst duration $EBS$.   
