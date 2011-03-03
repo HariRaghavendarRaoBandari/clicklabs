@@ -1,6 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 /*
- * drr.{cc,hh} -- deficit round-robin scheduler
+ * wdrr.{cc,hh} -- weighted deficit round-robin scheduler
+ * iizke
  * Robert Morris, Eddie Kohler
  *
  * Copyright (c) 1999-2000 Massachusetts Institute of Technology
