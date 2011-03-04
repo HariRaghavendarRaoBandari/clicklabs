@@ -23,6 +23,9 @@ Read or set up parameter Rate. Default value is 1 (pps).
 =h active read/write
 Boolean. If false, packet is just gone through this element.
 
+=h reset write-only
+Reset burst and the start time of generating token.
+
 =back
 
 =a RatedSplitter, RatedUnqueue, Meter */

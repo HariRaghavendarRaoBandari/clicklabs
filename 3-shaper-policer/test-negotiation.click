@@ -13,15 +13,15 @@
 //-> Discard;
 
 //flow2::UncontrolledFlow1 (RATE 100, BURST 2, STABLE 25);
-flow3::ProbUncontrolledFlow (MAXRATE 500, PROB_CHANGE 0.6)
+flow3::ProbUncontrolledFlow (MAXRATE 300, PROB_CHANGE 0.6)
 -> SetTimestamp
--> ToDump(dumpin2)
--> tee::Tee(2);
+-> ToDump(dumpin)
+-> tee::Tee(3);
 
 tee[0]
--> RatedNegotiablePolicer2(LEAKYRATE 120, INTERVAL 0.00833, EBS 10, CIR 100, CEBS 60)
--> SetTimestamp
--> ToDump(dumpout2)
+//-> RatedNegotiablePolicer2(LEAKYRATE 120, INTERVAL 0.00833, EBS 10, CIR 100, CEBS 60)
+//-> SetTimestamp
+//-> ToDump(dumpout2)
 -> Discard;
 
 tee[1]
@@ -37,4 +37,13 @@ rnp4[0]
 rnp4[1] 
 -> Queue(100) 
 -> [1]tss
+-> Discard;
+
+tee[2]
+-> srTCM_blind(CIR 100, CBS 50, EBS 10)
+-> cp::CheckPaint(0)
+-> Discard;
+cp[1]
+-> SetTimestamp
+-> ToDump(out_gy, SNAPLEN 1)
 -> Discard;

@@ -156,8 +156,25 @@ elementclass RatedNegotiablePolicer2 {
 
   input 
   -> leaky::RatedLeakyBucketShaper(SIZE $cebs, RATE $lr, INTERVAL $interval)
-  -> token::RatedTokenBucketShaper2(SIZE 1000, RATE $cir, BURST $ebs)
+  -> token::RatedTokenBucketShaper2(SIZE 1000, RATE $cir, INTERVAL $interval, BURST $ebs)
   -> output
 }
 
-
+elementclass srTCM_blind {
+  CIR $cir, EBS $ebs, CBS $cbs |
+  // color: Red = 0, Yellow = 1, Green = 2
+  TB_C::RatedToken(RATE $cir, BURST $cbs);
+  TB_E::RatedToken(RATE $cir, BURST $ebs);
+  
+  input 
+  -> TB_C
+  -> Paint(2)
+  -> output;
+  TB_C[1]
+  -> TB_E
+  -> Paint(1)
+  -> output;
+  TB_E[1]
+  -> Paint(0)
+  -> output;
+}

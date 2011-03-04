@@ -337,7 +337,7 @@ Note: if using tool \texttt{visual-clicky.sh}, you do not have to pre-compile th
   \subsubsection{Token bucket - new element}
   We implement Click element \texttt{RatedToken} to verify flow by using Token Bucket Algorithm, and each token allows one packet go through. This element needs two parameters BURST (number of packets) and RATE (packets per second). When this element is initialized, it also determines the start time of generating tokens. To control current number of generated token, we use a timestamp $fulltk\_tv$ (to know the last time of maximizing generated tokens) and $cburst$ (to determine how many packets are accepted). At any time, we can compute the number of generated tokens as:
   \begin{align*}ntokens = \max\{BURST; cburst + (now - fulltk\_tv)*RATE\}\end{align*}
-  If $ntokens$ is larger than 0, then let packet go through, else drop it or push it out to port 1. Note that, $fulltk\_tv$ and $cburst$ must be updated when $notkens$ equals $BURST$. We test \texttt{RatedToken} with the same scenario in the last section of compound element of token bucket. The result is shown in figure \ref{fig:test-tk-element}.
+  If $ntokens$ is larger than 0, then let packet go through, else drop it or push it out to port 1. Note that, $fulltk\_tv$ and $cburst$ must be updated when $notkens$ equals to $BURST$. We test \texttt{RatedToken} with the same scenario in the last section of compound element of token bucket. The result is shown in figure \ref{fig:test-tk-element}.
   \begin{figure}
       \centering
       \subfloat{
